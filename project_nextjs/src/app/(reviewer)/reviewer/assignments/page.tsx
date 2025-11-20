@@ -175,7 +175,7 @@ function ReviewerAssignments() {
                   </div>
                   <div className="flex space-x-2">
                     {assignment.status !== 'Completed' && (
-                      <Button variant="default" size="sm">
+                      <Button variant="primary" size="sm">
                         Start Review
                       </Button>
                     )}

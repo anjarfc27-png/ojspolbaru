@@ -20,7 +20,7 @@ type EditorialDecision = {
   description: string;
   nextStage?: SubmissionStage;
   status?: SubmissionStatus;
-  variant?: "default" | "destructive" | "outline";
+  variant?: "primary" | "secondary" | "ghost" | "danger" | "outline";
 };
 
 const EDITORIAL_DECISIONS: Record<SubmissionStage, EditorialDecision[]> = {
@@ -31,14 +31,14 @@ const EDITORIAL_DECISIONS: Record<SubmissionStage, EditorialDecision[]> = {
       description: "Kirim naskah ke tahap peer review",
       nextStage: "review",
       status: "in_review",
-      variant: "default"
+      variant: "primary"
     },
     {
       action: "decline_submission",
       label: "Decline Submission",
       description: "Tolak naskah di tahap awal",
       status: "declined",
-      variant: "destructive"
+      variant: "danger"
     }
   ],
   review: [
@@ -48,7 +48,7 @@ const EDITORIAL_DECISIONS: Record<SubmissionStage, EditorialDecision[]> = {
       description: "Terima naskah tanpa revisi",
       nextStage: "copyediting",
       status: "accepted",
-      variant: "default"
+      variant: "primary"
     },
     {
       action: "pending_revisions",
@@ -69,7 +69,7 @@ const EDITORIAL_DECISIONS: Record<SubmissionStage, EditorialDecision[]> = {
       label: "Decline Submission",
       description: "Tolak naskah setelah review",
       status: "declined",
-      variant: "destructive"
+      variant: "danger"
     },
     {
       action: "new_review_round",
@@ -86,7 +86,7 @@ const EDITORIAL_DECISIONS: Record<SubmissionStage, EditorialDecision[]> = {
       description: "Kirim ke tahap produksi/layout",
       nextStage: "production",
       status: "accepted",
-      variant: "default"
+      variant: "primary"
     },
     {
       action: "request_author_copyedit",
@@ -102,14 +102,14 @@ const EDITORIAL_DECISIONS: Record<SubmissionStage, EditorialDecision[]> = {
       label: "Schedule Publication",
       description: "Jadwalkan untuk publikasi",
       status: "scheduled",
-      variant: "default"
+      variant: "primary"
     },
     {
       action: "publish",
       label: "Publish",
       description: "Publikasikan secara langsung",
       status: "published",
-      variant: "default"
+      variant: "primary"
     },
     {
       action: "send_to_issue",
@@ -173,7 +173,7 @@ export function WorkflowStageActions({ submissionId, currentStage, status }: Pro
                 </div>
                 <Button
                   size="sm"
-                  variant={decision.variant || "default"}
+                  variant={decision.variant || "primary"}
                   onClick={() => handleDecision(decision)}
                   loading={isPending}
                   disabled={isPending}
