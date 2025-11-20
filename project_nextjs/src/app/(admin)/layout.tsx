@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { getRedirectPathByRole } from "@/lib/auth-redirect";
 import { 
   ChevronDown, 
   Menu, 
@@ -16,10 +17,14 @@ import {
   Globe,
   Mail,
   Home,
-  LogOut
+  LogOut,
+  Bell,
+  User
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { hasRole } from "@/lib/auth";
+import { Dropdown, DropdownItem, DropdownSection } from "@/components/ui/dropdown";
+import { useSupabase } from "@/providers/supabase-provider";
 
 export default function AdminLayout({
   children,
@@ -30,6 +35,41 @@ export default function AdminLayout({
   const { user, loading, logout } = useAuth();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const supabase = useSupabase();
+  const [journals, setJournals] = useState<{ id: string; title: string; path: string }[]>([]);
+
+  // Fetch journals for dropdown
+  useEffect(() => {
+    const fetchJournals = async () => {
+      try {
+        const { data } = await supabase
+          .from("journals")
+          .select("*")
+          .order("created_at", { ascending: true });
+        let rows = ((data ?? []) as Record<string, any>[]).map((r) => ({
+          id: r.id as string,
+          title: (r.title ?? r.name ?? r.journal_title ?? "") as string,
+          path: (r.path ?? r.slug ?? r.journal_path ?? "") as string,
+        }));
+        const missingNameIds = rows.filter((j) => !j.title || j.title.trim().length === 0).map((j) => j.id);
+        if (missingNameIds.length) {
+          const { data: js } = await supabase
+            .from("journal_settings")
+            .select("journal_id, setting_value")
+            .eq("setting_name", "name")
+            .in("journal_id", missingNameIds);
+          const nameMap = new Map((js?.data ?? []).map((j) => [j.journal_id, j.setting_value]));
+          rows = rows.map((j) => (nameMap.has(j.id) ? { ...j, title: nameMap.get(j.id) as string } : j));
+        }
+        setJournals(rows.filter((j) => j.title && j.title.trim().length > 0));
+      } catch (error) {
+        console.error("Error fetching journals:", error);
+      }
+    };
+    if (user) {
+      fetchJournals();
+    }
+  }, [supabase, user]);
 
   const navigation = [
     {
@@ -82,7 +122,9 @@ export default function AdminLayout({
 
     const hasAdminRole = hasRole(user, 'admin');
     if (!hasAdminRole) {
-      router.push('/dashboard');
+      // Redirect to role-appropriate route
+      const redirectPath = getRedirectPathByRole(user);
+      router.push(redirectPath);
     }
   }, [user, loading, router]);
 
@@ -102,145 +144,182 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[#eaedee]">
-      {/* Header */}
-      <header className="bg-[#002C40] text-white sticky top-0 z-50">
-        <div className="px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            {/* Left side */}
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="lg:hidden p-2 rounded-md hover:bg-white hover:bg-opacity-10"
+    <div className="min-h-screen bg-white flex flex-col">
+      {/* Top Bar - Dark Blue */}
+      <header className="bg-[#002C40] text-white" style={{backgroundColor: '#002C40'}}>
+        <div className="px-6 py-4 flex items-center justify-between" style={{padding: '1rem 1.5rem'}}>
+          {/* Left: Open Journal Systems and Tasks */}
+          <div className="flex items-center gap-6">
+            <div className="relative">
+              <Dropdown
+                button={
+                  <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+                    <span className="text-white text-base font-medium" style={{fontSize: '1rem'}}>Open Journal Systems</span>
+                    <ChevronDown className="h-4 w-4 text-white" />
+                  </div>
+                }
+                align="left"
               >
-                {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              </button>
-              
-              <Link href="/admin" className="flex items-center space-x-3">
-                <div className="bg-white p-2 rounded">
-                  <BookOpen className="h-6 w-6 text-[#002C40]" />
+                <div className="bg-white rounded-md border border-gray-200 shadow-lg min-w-[250px] py-1">
+                  <Link 
+                    href="/admin" 
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-100 transition-colors"
+                  >
+                    <Home className="h-4 w-4" />
+                    Site Administration
+                  </Link>
+                  {journals.length > 0 && (
+                    <>
+                      {journals.map((journal) => (
+                        <Link
+                          key={journal.id}
+                          href={journal.path ? `/${journal.path}` : `/journal/${journal.id}`}
+                          className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-100 transition-colors"
+                        >
+                          <BookOpen className="h-4 w-4" />
+                          {journal.title}
+                        </Link>
+                      ))}
+                    </>
+                  )}
                 </div>
-                <div>
-                  <h1 className="text-xl font-bold">OJS Site Administration</h1>
-                  <p className="text-xs opacity-80">Open Journal Systems</p>
-                </div>
-              </Link>
+              </Dropdown>
             </div>
+            {/* Tasks */}
+            <div className="flex items-center gap-2">
+              <span className="text-white text-base font-medium" style={{fontSize: '1rem'}}>Tasks</span>
+              <span className="bg-gray-600 text-white rounded-full px-2 py-0.5 text-sm" style={{
+                backgroundColor: '#4B5563',
+                padding: '0.125rem 0.5rem',
+                fontSize: '0.875rem',
+                borderRadius: '9999px'
+              }}>0</span>
+            </div>
+          </div>
 
-            {/* Right side */}
-            <div className="flex items-center space-x-4">
-              <div className="hidden sm:flex items-center space-x-3">
-                <div className="text-right">
-                  <p className="text-sm font-medium">{user.full_name || user.username}</p>
-                  <p className="text-xs opacity-80">{user.email}</p>
+          {/* Right: Language and User */}
+          <div className="flex items-center gap-6">
+            {/* Language */}
+            <Dropdown
+              button={
+                <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+                  <Globe className="h-4 w-4 text-white" />
+                  <span className="text-white text-base font-medium" style={{fontSize: '1rem'}}>English</span>
+                  <ChevronDown className="h-4 w-4 text-white" />
                 </div>
-                <div className="w-8 h-8 bg-[#006798] rounded-full flex items-center justify-center">
-                  <span className="text-sm font-medium">
-                    {(user.full_name || user.username).charAt(0).toUpperCase()}
-                  </span>
+              }
+              align="right"
+            >
+              <DropdownSection>
+                <DropdownItem href="#" icon={<Globe className="h-4 w-4" />}>
+                  English
+                </DropdownItem>
+                <DropdownItem href="#" icon={<Globe className="h-4 w-4" />}>
+                  Bahasa Indonesia
+                </DropdownItem>
+                <DropdownItem href="#" icon={<Globe className="h-4 w-4" />}>
+                  Français
+                </DropdownItem>
+                <DropdownItem href="#" icon={<Globe className="h-4 w-4" />}>
+                  Español
+                </DropdownItem>
+              </DropdownSection>
+            </Dropdown>
+
+            {/* User with Logout */}
+            <Dropdown
+              button={
+                <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+                  <User className="h-4 w-4 text-white" />
+                  <span className="text-white text-base font-medium" style={{fontSize: '1rem'}}>{user.username || 'admin'}</span>
+                  <ChevronDown className="h-4 w-4 text-white" />
                 </div>
-              </div>
-              
-              <Button
-                onClick={logout}
-                variant="ghost"
-                size="sm"
-                className="text-white hover:bg-white hover:bg-opacity-10"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </div>
+              }
+              align="right"
+            >
+              <DropdownSection>
+                <DropdownItem 
+                  onClick={async () => {
+                    await logout();
+                    router.push('/login');
+                  }}
+                  icon={<LogOut className="h-4 w-4" />}
+                >
+                  Logout
+                </DropdownItem>
+              </DropdownSection>
+            </Dropdown>
           </div>
         </div>
       </header>
 
-      <div className="flex">
-        {/* Sidebar */}
-        <aside className={`${sidebarOpen ? 'block' : 'hidden'} lg:block w-64 bg-white shadow-sm border-r border-gray-200 min-h-screen`}>
-          <nav className="p-4 space-y-2">
-            {navigation.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    item.current
-                      ? "bg-[#006798] text-white"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`}
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span>{item.name}</span>
-                </Link>
-              );
-            })}
+      <div className="flex flex-1">
+        {/* Sidebar - Dark Blue - Reduced Size */}
+        <aside className={`${sidebarOpen ? 'block' : 'hidden'} lg:block bg-[#002C40]`} style={{
+          backgroundColor: '#002C40',
+          minHeight: 'calc(100vh - 64px)',
+          width: '16rem'
+        }}>
+          <div className="p-6" style={{padding: '1.5rem 1.25rem'}}>
+            {/* Mobile menu button */}
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="lg:hidden mb-4 p-2 rounded-md hover:bg-white hover:bg-opacity-10 text-white"
+            >
+              {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
 
-            {/* Site Settings Submenu */}
-            {pathname.startsWith("/admin/site-settings") && (
-              <div className="ml-6 mt-2 space-y-1 border-l-2 border-gray-200 pl-4">
-                {siteSettingsSubmenu.map((item) => (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className={`block px-3 py-1 text-sm rounded ${
-                      pathname === item.href
-                        ? "text-[#006798] font-medium bg-blue-50"
-                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                    }`}
-                    onClick={() => setSidebarOpen(false)}
-                  >
-                    {item.name}
-                  </Link>
-                ))}
+            {/* iamJOS Logo - Horizontal Layout - Reduced */}
+            <div className="mb-8" style={{marginBottom: '2rem'}}>
+              <div className="flex items-baseline gap-2 mb-3">
+                <span className="text-white font-bold" style={{
+                  fontSize: '2.5rem',
+                  lineHeight: '1',
+                  fontWeight: 'bold',
+                  letterSpacing: '-0.02em'
+                }}>
+                  iam
+                </span>
+                <span className="text-white font-bold" style={{
+                  fontSize: '3rem',
+                  lineHeight: '1',
+                  fontWeight: 'bold',
+                  letterSpacing: '-0.02em'
+                }}>
+                  JOS
+                </span>
               </div>
-            )}
-          </nav>
+              <div className="text-white uppercase tracking-wider opacity-85" style={{
+                fontSize: '0.65rem',
+                letterSpacing: '0.2em',
+                lineHeight: '1.5',
+                fontWeight: '500',
+                marginTop: '0.5rem'
+              }}>
+                INTEGRATED ACADEMIC MANAGEMENT
+              </div>
+              <div className="text-white uppercase tracking-wider opacity-85" style={{
+                fontSize: '0.65rem',
+                letterSpacing: '0.2em',
+                lineHeight: '1.5',
+                fontWeight: '500'
+              }}>
+                JOURNAL OPERATION SYSTEM
+              </div>
+            </div>
+            
+            {/* Administration Heading - Reduced */}
+            <div className="mt-6">
+              <h2 className="text-white font-bold" style={{
+                fontSize: '1.25rem',
+                fontWeight: 'bold'
+              }}>Administration</h2>
+            </div>
+          </div>
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-6">
-          {/* Breadcrumb */}
-          <div className="mb-6">
-            <nav className="flex" aria-label="Breadcrumb">
-              <ol className="inline-flex items-center space-x-1 md:space-x-3">
-                <li className="inline-flex items-center">
-                  <Link href="/admin" className="text-gray-700 hover:text-[#006798] inline-flex items-center">
-                    <Home className="w-4 h-4 mr-2" />
-                    Admin
-                  </Link>
-                </li>
-                {pathname.split('/').slice(2).map((segment, index, array) => {
-                  const href = '/admin/' + array.slice(0, index + 1).join('/');
-                  const isLast = index === array.length - 1;
-                  
-                  return (
-                    <li key={index}>
-                      <div className="flex items-center">
-                        <span className="text-gray-400">/</span>
-                        {isLast ? (
-                          <span className="text-gray-900 capitalize ml-2">
-                            {segment.replace('-', ' ')}
-                          </span>
-                        ) : (
-                          <Link 
-                            href={href} 
-                            className="text-gray-700 hover:text-[#006798] ml-2 capitalize"
-                          >
-                            {segment.replace('-', ' ')}
-                          </Link>
-                        )}
-                      </div>
-                    </li>
-                  );
-                })}
-              </ol>
-            </nav>
-          </div>
-
-          {/* Page Content */}
+        <main className="flex-1 bg-white min-h-screen">
           {children}
         </main>
       </div>

@@ -1,113 +1,136 @@
-'use client'
+import Link from "next/link";
+import { AdminActionLink } from "@/components/admin/admin-action-link";
 
-import { useAuth } from '@/contexts/AuthContext'
-import { withAuth } from '@/lib/auth-client'
-import Link from 'next/link'
+const SITE_MANAGEMENT_LINKS = [
+  {
+    label: "Hosted Journals",
+    href: "/admin/site-management/hosted-journals",
+  },
+  {
+    label: "Site Settings",
+    href: "/admin/site-settings/site-setup",
+  },
+];
 
-function AdminDashboard() {
-  const { user } = useAuth()
+const ADMIN_FUNCTIONS_LINKS = [
+  {
+    label: "System Information",
+    href: "/admin/system/system-information",
+    actionType: "link" as const,
+  },
+  {
+    label: "Expire User Sessions",
+    href: "/admin/system/expire-sessions",
+    actionType: "form" as const,
+    confirmMessage: "Tindakan ini akan mengeluarkan seluruh pengguna. Lanjutkan?",
+  },
+  {
+    label: "Clear Data Caches",
+    href: "/admin/system/clear-data-caches",
+    actionType: "form" as const,
+  },
+  {
+    label: "Clear Template Cache",
+    href: "/admin/system/clear-template-cache",
+    actionType: "form" as const,
+  },
+  {
+    label: "Clear Scheduled Task Execution Logs",
+    href: "/admin/system/clear-scheduled-tasks",
+    actionType: "form" as const,
+  },
+];
 
+export default function AdminPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header OJS Klasik */}
-      <header className="bg-[#002C40] text-white">
-        <div className="px-6 py-4">
-          <div className="flex items-center space-x-4">
-            <div className="bg-white p-3 rounded">
-              <div className="text-2xl font-bold text-[#002C40]">OJS</div>
-            </div>
-            <div>
-              <h1 className="text-xl font-bold">Open Journal Systems</h1>
-              <p className="text-sm opacity-80">Administration</p>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-white">
+      {/* Header Bar - Light Gray */}
+      <div className="bg-gray-200 px-6 py-4" style={{
+        backgroundColor: '#e5e5e5',
+        padding: '1rem 1.5rem'
+      }}>
+        <h1 className="text-xl font-semibold text-gray-900" style={{
+          fontSize: '1.25rem',
+          fontWeight: '600',
+          color: '#111827'
+        }}>
+          Site Administration
+        </h1>
+      </div>
 
-      <div className="flex">
-        {/* Sidebar Klasik */}
-        <aside className="w-64 bg-[#002C40] text-white min-h-screen">
-          <div className="p-4">
-            <nav className="space-y-2">
+      {/* Content Panel - OJS 3.3 Style */}
+      <div className="px-6 py-6" style={{
+        padding: '2rem 1.5rem'
+      }}>
+        {/* Site Management Section - Larger Font */}
+        <h2 style={{
+          fontSize: '1.5rem',
+          fontWeight: 'bold',
+          marginBottom: '1.25rem',
+          color: '#002C40'
+        }}>
+          Site Management
+        </h2>
+        <ul style={{
+          listStyle: 'none',
+          padding: 0,
+          margin: 0,
+          marginBottom: '3rem'
+        }}>
+          {SITE_MANAGEMENT_LINKS.map((link) => (
+            <li key={link.href} style={{ marginBottom: '0.875rem' }}>
               <Link 
-                href="/admin" 
-                className="block px-3 py-2 rounded hover:bg-white hover:bg-opacity-10"
+                href={link.href} 
+                style={{
+                  color: '#006798',
+                  textDecoration: 'underline',
+                  fontSize: '0.9375rem'
+                }}
+                className="hover:no-underline"
               >
-                Dashboard
+                {link.label}
               </Link>
-            </nav>
-          </div>
-        </aside>
+            </li>
+          ))}
+        </ul>
 
-        {/* Main Content */}
-        <main className="flex-1 p-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="border-b border-gray-200 pb-4 mb-6">
-              <h1 className="text-2xl font-bold text-gray-900">Site Administration</h1>
-            </div>
-
-            <div className="space-y-8">
-              {/* Site Management */}
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Site Management</h2>
-                <div className="space-y-2">
-                  <Link 
-                    href="/admin/site-management/hosted-journals" 
-                    className="block text-blue-600 hover:text-blue-800 hover:underline"
-                  >
-                    Hosted Journals
-                  </Link>
-                  <Link 
-                    href="/admin/site-settings/site-setup" 
-                    className="block text-blue-600 hover:text-blue-800 hover:underline"
-                  >
-                    Site Settings
-                  </Link>
-                </div>
-              </div>
-
-              {/* Administrative Functions */}
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Administrative Functions</h2>
-                <div className="space-y-2">
-                  <Link 
-                    href="/admin/system/system-information" 
-                    className="block text-blue-600 hover:text-blue-800 hover:underline"
-                  >
-                    System Information
-                  </Link>
-                  <Link 
-                    href="/admin/system/expire-sessions" 
-                    className="block text-blue-600 hover:text-blue-800 hover:underline"
-                  >
-                    Expire User Sessions
-                  </Link>
-                  <Link 
-                    href="/admin/system/clear-data-caches" 
-                    className="block text-blue-600 hover:text-blue-800 hover:underline"
-                  >
-                    Clear Data Caches
-                  </Link>
-                  <Link 
-                    href="/admin/system/clear-template-cache" 
-                    className="block text-blue-600 hover:text-blue-800 hover:underline"
-                  >
-                    Clear Template Cache
-                  </Link>
-                  <Link 
-                    href="/admin/system/clear-scheduled-tasks" 
-                    className="block text-blue-600 hover:text-blue-800 hover:underline"
-                  >
-                    Clear Scheduled Task Execution Logs
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </main>
+        {/* Administrative Functions Section - Larger Font */}
+        <h2 style={{
+          fontSize: '1.5rem',
+          fontWeight: 'bold',
+          marginBottom: '1.25rem',
+          color: '#002C40'
+        }}>
+          Administrative Functions
+        </h2>
+        <ul style={{
+          listStyle: 'none',
+          padding: 0,
+          margin: 0
+        }}>
+          {ADMIN_FUNCTIONS_LINKS.map((link) => (
+            <li key={link.href} style={{ marginBottom: '0.875rem' }}>
+              {link.actionType === "form" ? (
+                <AdminActionLink href={link.href} confirmMessage={link.confirmMessage}>
+                  {link.label}
+                </AdminActionLink>
+              ) : (
+                <Link 
+                  href={link.href} 
+                  style={{
+                    color: '#006798',
+                    textDecoration: 'underline',
+                    fontSize: '0.9375rem'
+                  }}
+                  className="hover:no-underline"
+                >
+                  {link.label}
+                </Link>
+              )}
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
-  )
+  );
 }
-
-export default withAuth(AdminDashboard, 'admin')

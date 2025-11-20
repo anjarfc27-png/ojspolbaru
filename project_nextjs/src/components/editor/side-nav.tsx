@@ -2,44 +2,57 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { 
+  LayoutDashboard, 
+  Mail, 
+  Inbox, 
+  List, 
+  Archive, 
+  Settings, 
+  FileEdit, 
+  Eye, 
+  BookOpen, 
+  Megaphone, 
+  Users, 
+  Wrench,
+  BarChart3,
+  FileText,
+  User
+} from "lucide-react";
 
 const NAV_SECTIONS = [
   {
-    label: "Workflow",
+    label: "WORKFLOW",
     items: [
-      { label: "Dashboard", href: "/editor" },
-      { label: "Unassigned", href: "/editor/submissions?queue=unassigned" },
-      { label: "My Queue", href: "/editor/submissions?queue=my" },
-      { label: "All Active", href: "/editor/submissions" },
-      { label: "Archived", href: "/editor/submissions?queue=archived" },
+      { label: "Dashboard", href: "/editor", icon: LayoutDashboard },
+      { label: "Unassigned", href: "/editor/submissions?queue=unassigned", icon: Mail },
+      { label: "My Queue", href: "/editor/submissions?queue=my", icon: Inbox },
+      { label: "All Active", href: "/editor/submissions", icon: List },
+      { label: "Archived", href: "/editor/submissions?queue=archived", icon: Archive },
     ],
   },
   {
-    label: "Monitoring",
+    label: "MONITORING",
     items: [
-      { label: "Production", href: "/editor/submissions?stage=production" },
-      { label: "Copyediting", href: "/editor/submissions?stage=copyediting" },
-      { label: "Review", href: "/editor/submissions?stage=review" },
+      { label: "Production", href: "/editor/submissions?stage=production", icon: Settings },
+      { label: "Copyediting", href: "/editor/submissions?stage=copyediting", icon: FileEdit },
+      { label: "Review", href: "/editor/submissions?stage=review", icon: Eye },
     ],
   },
   {
-    label: "Management",
+    label: "MANAGEMENT",
     items: [
-      { label: "Issues", href: "/editor/issues" },
-      { label: "Announcements", href: "/editor/announcements" },
-      { label: "Settings: Workflow", href: "/editor/settings/workflow" },
-      { label: "Settings: Website", href: "/editor/settings/website" },
-      { label: "Settings: Distribution", href: "/editor/settings/distribution" },
-      { label: "Users & Roles", href: "/editor/users-roles" },
-      { label: "Tools", href: "/editor/tools" },
+      { label: "Issues", href: "/editor/issues", icon: FileText },
+      { label: "Announcements", href: "/editor/announcements", icon: Megaphone },
+      { label: "Settings: Workflow", href: "/editor/settings/workflow", icon: Settings },
     ],
   },
   {
-    label: "Statistics",
+    label: "STATISTICS",
     items: [
-      { label: "Editorial", href: "/editor/statistics/editorial" },
-      { label: "Publications", href: "/editor/statistics/publications" },
-      { label: "Users", href: "/editor/statistics/users" },
+      { label: "Editorial", href: "/editor/statistics/editorial", icon: BarChart3 },
+      { label: "Publications", href: "/editor/statistics/publications", icon: BookOpen },
+      { label: "Users", href: "/editor/statistics/users", icon: User },
     ],
   },
 ];
@@ -49,33 +62,40 @@ export function EditorSideNav() {
   const searchParams = useSearchParams();
 
   return (
-    <aside className="pkp_structure_sidebar" style={{padding: '1rem'}}>
+    <aside className="pkp_structure_sidebar" style={{padding: '1.5rem'}}>
       <nav className="pkp_nav">
         {NAV_SECTIONS.map((section) => (
-          <div key={section.label} className="pkp_nav_group" style={{marginBottom: '1.5rem'}}>
-            <h4 className="pkp_nav_group_title" style={{fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '0.5rem', color: 'rgba(255,255,255,0.8)'}}>
+          <div key={section.label} className="pkp_nav_group" style={{marginBottom: '2rem'}}>
+            <h4 className="pkp_nav_group_title" style={{fontSize: '0.875rem', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '0.75rem', color: 'rgba(255,255,255,0.8)', letterSpacing: '0.05em'}}>
               {section.label}
             </h4>
             <ul className="pkp_nav_list" style={{listStyle: 'none', margin: 0, padding: 0}}>
               {section.items.map((item) => {
                 const active = isActive(pathname, searchParams?.toString() ?? "", item.href);
+                const Icon = item.icon;
                 return (
-                  <li key={item.href} style={{margin: 0}}>
+                  <li key={item.href} style={{margin: 0, marginBottom: '0.25rem'}}>
                     <Link
                       href={item.href}
                       className="pkp_nav_link"
                       style={{
-                        display: 'block',
-                        padding: '0.5rem 0',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.75rem',
+                        padding: '0.625rem 0',
                         color: active ? 'white' : 'rgba(255,255,255,0.9)',
                         textDecoration: 'none',
-                        fontSize: '0.875rem',
-                        borderLeft: active ? '3px solid white' : 'none',
-                        paddingLeft: active ? '0.75rem' : '1rem',
-                        backgroundColor: active ? 'rgba(255,255,255,0.1)' : 'transparent'
+                        fontSize: '0.9375rem',
+                        fontWeight: active ? '600' : '400',
+                        borderLeft: active ? '4px solid white' : 'none',
+                        paddingLeft: active ? '1rem' : '1.25rem',
+                        backgroundColor: active ? 'rgba(255,255,255,0.15)' : 'transparent',
+                        transition: 'all 0.2s',
+                        borderRadius: '4px'
                       }}
                     >
-                      {item.label}
+                      <Icon className="h-5 w-5" style={{flexShrink: 0}} />
+                      <span>{item.label}</span>
                     </Link>
                   </li>
                 );

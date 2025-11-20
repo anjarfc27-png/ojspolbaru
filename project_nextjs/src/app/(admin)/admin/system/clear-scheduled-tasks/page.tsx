@@ -21,12 +21,21 @@ export default function ClearScheduledTaskLogsPage() {
   >(async () => clearScheduledTaskLogsAction(), null);
 
   return (
-    <div className="space-y-6">
-      <header className="space-y-2">
-        <h2 className="text-xl font-semibold text-[var(--foreground)]">
+    <div className="space-y-6" style={{
+      gap: '1.5rem'
+    }}>
+      <header className="space-y-2" style={{
+        gap: '0.5rem'
+      }}>
+        <h2 className="text-xl font-semibold text-gray-900" style={{
+          fontSize: '1.25rem',
+          fontWeight: '600'
+        }}>
           Clear Scheduled Task Execution Logs
         </h2>
-        <p className="text-sm text-[var(--muted)]">
+        <p className="text-sm text-gray-600" style={{
+          fontSize: '0.875rem'
+        }}>
           Hapus file log eksekusi tugas terjadwal dari server. Anda dapat
           melakukan ini untuk menghemat ruang penyimpanan.
         </p>
@@ -41,25 +50,37 @@ export default function ClearScheduledTaskLogsPage() {
         <FormMessage tone="error">{state.message}</FormMessage>
       )}
 
-      <div className="overflow-hidden rounded-lg border border-[var(--border)] bg-white shadow-sm">
-        <table className="min-w-full divide-y divide-[var(--border)]">
-          <thead className="bg-[var(--surface-muted)]">
+      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600" style={{
+                padding: '0.75rem 1.5rem',
+                fontSize: '0.75rem'
+              }}>
                 Nama tugas
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600" style={{
+                padding: '0.75rem 1.5rem',
+                fontSize: '0.75rem'
+              }}>
                 Eksekusi terakhir
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[var(--border)]">
+          <tbody className="divide-y divide-gray-200 bg-white">
             {MOCK_LOGS.map((log) => (
               <tr key={log.id}>
-                <td className="px-4 py-3 text-sm text-[var(--foreground)]">
+                <td className="px-6 py-4 text-sm text-gray-900" style={{
+                  padding: '1rem 1.5rem',
+                  fontSize: '0.875rem'
+                }}>
                   {log.name}
                 </td>
-                <td className="px-4 py-3 text-sm text-[var(--muted)]">
+                <td className="px-6 py-4 text-sm text-gray-600" style={{
+                  padding: '1rem 1.5rem',
+                  fontSize: '0.875rem'
+                }}>
                   {log.executedAt}
                 </td>
               </tr>

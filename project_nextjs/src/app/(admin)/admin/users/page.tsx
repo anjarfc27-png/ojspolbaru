@@ -111,14 +111,32 @@ function AdminUsers() {
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
-        <Button>
-          <UserPlus className="h-4 w-4 mr-2" />
-          Add New User
-        </Button>
+    <div className="min-h-screen bg-white">
+      {/* Header Bar - Light Gray */}
+      <div className="bg-gray-200 px-6 py-4" style={{
+        backgroundColor: '#e5e5e5',
+        padding: '1rem 1.5rem'
+      }}>
+        <div className="flex justify-between items-center">
+          <h1 className="text-xl font-semibold text-gray-900" style={{
+            fontSize: '1.25rem',
+            fontWeight: '600',
+            color: '#111827'
+          }}>
+            User Management
+          </h1>
+          <Button>
+            <UserPlus className="h-4 w-4 mr-2" />
+            Add New User
+          </Button>
+        </div>
       </div>
+
+      {/* Content */}
+      <div className="px-6 py-6" style={{
+        padding: '2rem 1.5rem'
+      }}>
+        <div className="space-y-6">
 
       {/* Filters */}
       <Card>
@@ -308,6 +326,8 @@ function AdminUsers() {
           )}
         </CardContent>
       </Card>
+        </div>
+      </div>
     </div>
   );
 }

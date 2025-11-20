@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { TopBar } from "@/components/admin/top-bar";
 import { useAuth } from "@/contexts/AuthContext";
+import { getRedirectPathByRole } from "@/lib/auth-redirect";
 
 type Props = {
   children: ReactNode;
@@ -30,7 +31,9 @@ export default function SubmissionDetailLayout({ children }: Props) {
     const canEdit = user.roles?.some(r => r.role_path === "editor" || r.role_path === "admin");
     if (!canEdit) {
       setAuthorized(false);
-      router.replace("/dashboard");
+      // Redirect to role-appropriate route
+      const redirectPath = getRedirectPathByRole(user);
+      router.replace(redirectPath);
       return;
     }
     setAuthorized(true);

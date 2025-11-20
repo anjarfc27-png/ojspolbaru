@@ -1,0 +1,31 @@
+import type { User } from '@/lib/auth'
+
+/**
+ * Get redirect path based on user roles
+ * Priority: admin > manager > editor > author > reviewer
+ */
+export function getRedirectPathByRole(user: User | null): string {
+  if (!user || !user.roles || user.roles.length === 0) {
+    return "/dashboard";
+  }
+  
+  const rolePaths = user.roles.map(r => r.role_path);
+  
+  // Priority: admin > manager > editor > author > reviewer
+  if (rolePaths.includes("admin")) {
+    return "/admin";
+  } else if (rolePaths.includes("manager")) {
+    return "/admin";
+  } else if (rolePaths.includes("editor") || rolePaths.includes("section-editor") || 
+             rolePaths.includes("copyeditor") || rolePaths.includes("proofreader") || 
+             rolePaths.includes("layout-editor")) {
+    return "/editor";
+  } else if (rolePaths.includes("author")) {
+    return "/author";
+  } else if (rolePaths.includes("reviewer")) {
+    return "/reviewer";
+  }
+  
+  return "/dashboard";
+}
+

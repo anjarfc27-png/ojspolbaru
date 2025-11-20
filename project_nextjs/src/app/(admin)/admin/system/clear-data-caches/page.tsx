@@ -19,12 +19,21 @@ export default function ClearDataCachesPage() {
   );
 
   return (
-    <div className="space-y-6">
-      <header className="space-y-2">
-        <h2 className="text-xl font-semibold text-[var(--foreground)]">
+    <div className="space-y-6" style={{
+      gap: '1.5rem'
+    }}>
+      <header className="space-y-2" style={{
+        gap: '0.5rem'
+      }}>
+        <h2 className="text-xl font-semibold text-gray-900" style={{
+          fontSize: '1.25rem',
+          fontWeight: '600'
+        }}>
           Clear Data Caches
         </h2>
-        <p className="text-sm text-[var(--muted)]">
+        <p className="text-sm text-gray-600" style={{
+          fontSize: '0.875rem'
+        }}>
           Paksa pemuatan ulang data setelah melakukan perubahan konfigurasi atau penyesuaian.
         </p>
       </header>
@@ -35,16 +44,27 @@ export default function ClearDataCachesPage() {
         </FormMessage>
       )}
 
-      <div className="space-y-4">
+      <div className="space-y-4" style={{
+        gap: '1rem'
+      }}>
         {CACHE_ITEMS.map((item) => (
           <div
             key={item.id}
-            className="rounded-md border border-[var(--border)] bg-[var(--surface-muted)] p-4"
+            className="rounded-md border border-gray-200 bg-gray-50 p-5"
+            style={{
+              padding: '1.25rem'
+            }}
           >
-            <h3 className="text-sm font-semibold text-[var(--foreground)]">
+            <h3 className="text-base font-semibold text-gray-900 mb-2" style={{
+              fontSize: '1rem',
+              fontWeight: '600',
+              marginBottom: '0.5rem'
+            }}>
               {item.label}
             </h3>
-            <p className="mt-1 text-sm text-[var(--muted)]">
+            <p className="text-sm text-gray-600" style={{
+              fontSize: '0.875rem'
+            }}>
               {item.description}
             </p>
           </div>

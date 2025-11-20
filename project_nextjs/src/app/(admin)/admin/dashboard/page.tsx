@@ -1,7 +1,6 @@
 import Link from "next/link";
 
 import { AdminActionLink } from "@/components/admin/admin-action-link";
-import { PageHeader } from "@/components/admin/page-header";
 
 const SITE_MANAGEMENT_LINKS = [
   {
@@ -45,50 +44,94 @@ const ADMIN_FUNCTIONS_LINKS = [
 
 export default function DashboardPage() {
   return (
-    <section className="space-y-6">
-      <PageHeader
-        title="Site Administration"
-        subtitle="Kelola jurnal yang di-host dan akses fungsi administratif."
-        showBreadcrumbs={false}
-      />
-      <div className="rounded-md border border-[var(--border)] bg-white px-6 py-5 shadow-sm">
-        <div className="mb-4 rounded-md bg-[#eef2f7] px-4 py-3 text-base font-semibold text-[var(--foreground)]">
-          Site Administration
-        </div>
-        <div className="space-y-6">
-          <div>
-            <h2 className="mb-3 text-base font-bold text-[var(--foreground)]">Site Management</h2>
-            <div className="space-y-1">
-              {SITE_MANAGEMENT_LINKS.map((link) => (
-                <div key={link.href}>
-                  <Link href={link.href} className="text-sm text-[var(--primary)] underline hover:no-underline">
-                    {link.label}
-                  </Link>
-                </div>
-              ))}
-            </div>
-          </div>
+    <div className="pkp_structure_page">
+      {/* Page Heading - OJS 3.3 Style */}
+      <h1 className="app__pageHeading" style={{
+        fontSize: '1.5rem',
+        fontWeight: 'bold',
+        marginBottom: '1.5rem',
+        color: '#002C40'
+      }}>
+        Site Administration
+      </h1>
 
-          <div>
-            <h2 className="mb-3 text-base font-bold text-[var(--foreground)]">Administrative Functions</h2>
-            <div className="space-y-1">
-              {ADMIN_FUNCTIONS_LINKS.map((link) => (
-                <div key={link.href}>
-                  {link.actionType === "form" ? (
-                    <AdminActionLink href={link.href} confirmMessage={link.confirmMessage}>
-                      {link.label}
-                    </AdminActionLink>
-                  ) : (
-                    <Link href={link.href} className="text-sm text-[var(--primary)] underline hover:no-underline">
-                      {link.label}
-                    </Link>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+      {/* Content Panel - OJS 3.3 Style */}
+      <div className="app__contentPanel" style={{
+        backgroundColor: 'white',
+        border: '1px solid #ddd',
+        borderRadius: '4px',
+        padding: '1.5rem',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+      }}>
+        {/* Site Management Section */}
+        <h2 style={{
+          fontSize: '1.125rem',
+          fontWeight: 'bold',
+          marginBottom: '0.75rem',
+          color: '#002C40'
+        }}>
+          Site Management
+        </h2>
+        <ul style={{
+          listStyle: 'none',
+          padding: 0,
+          margin: 0,
+          marginBottom: '2rem'
+        }}>
+          {SITE_MANAGEMENT_LINKS.map((link) => (
+            <li key={link.href} style={{ marginBottom: '0.5rem' }}>
+              <Link 
+                href={link.href} 
+                style={{
+                  color: '#006798',
+                  textDecoration: 'underline',
+                  fontSize: '0.875rem'
+                }}
+                className="hover:no-underline"
+              >
+                {link.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+
+        {/* Administrative Functions Section */}
+        <h2 style={{
+          fontSize: '1.125rem',
+          fontWeight: 'bold',
+          marginBottom: '0.75rem',
+          color: '#002C40'
+        }}>
+          Administrative Functions
+        </h2>
+        <ul style={{
+          listStyle: 'none',
+          padding: 0,
+          margin: 0
+        }}>
+          {ADMIN_FUNCTIONS_LINKS.map((link) => (
+            <li key={link.href} style={{ marginBottom: '0.5rem' }}>
+              {link.actionType === "form" ? (
+                <AdminActionLink href={link.href} confirmMessage={link.confirmMessage}>
+                  {link.label}
+                </AdminActionLink>
+              ) : (
+                <Link 
+                  href={link.href} 
+                  style={{
+                    color: '#006798',
+                    textDecoration: 'underline',
+                    fontSize: '0.875rem'
+                  }}
+                  className="hover:no-underline"
+                >
+                  {link.label}
+                </Link>
+              )}
+            </li>
+          ))}
+        </ul>
       </div>
-    </section>
+    </div>
   );
 }

@@ -6,11 +6,11 @@ import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { SUBMISSION_STAGES } from "@/features/editor/types";
 
 type RouteParams = {
-  params: { submissionId: string };
+  params: Promise<{ submissionId: string }>;
 };
 
-export async function GET(_request: Request, { params }: RouteParams) {
-  const submissionId = params.submissionId;
+export async function GET(_request: Request, context: RouteParams) {
+  const { submissionId } = await context.params;
   if (!submissionId) {
     return NextResponse.json({ ok: false, message: "Submission tidak ditemukan." }, { status: 400 });
   }
@@ -47,8 +47,9 @@ export async function GET(_request: Request, { params }: RouteParams) {
   }
 }
 
-export async function POST(request: Request, { params }: RouteParams) {
-  const submissionId = params.submissionId;
+export async function POST(request: Request, context: RouteParams) {
+  const { submissionId } = await context.params;
+  
   if (!submissionId) {
     return NextResponse.json({ ok: false, message: "Submission tidak ditemukan." }, { status: 400 });
   }
@@ -94,8 +95,8 @@ export async function POST(request: Request, { params }: RouteParams) {
   }
 }
 
-export async function DELETE(request: Request, { params }: RouteParams) {
-  const submissionId = params.submissionId;
+export async function DELETE(request: Request, context: RouteParams) {
+  
   if (!submissionId) {
     return NextResponse.json({ ok: false, message: "Submission tidak ditemukan." }, { status: 400 });
   }

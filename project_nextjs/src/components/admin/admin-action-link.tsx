@@ -27,9 +27,17 @@ export function AdminActionLink({ href, confirmMessage, children }: Props) {
   };
 
   return (
-    <Link href={href} onClick={handleClick} className="text-sm text-[var(--primary)] underline hover:no-underline">
+    <Link 
+      href={href} 
+      onClick={handleClick} 
+      style={{
+        color: '#006798',
+        textDecoration: 'underline',
+        fontSize: '0.9375rem'
+      }}
+      className="hover:no-underline"
+    >
       {children}
     </Link>
   );
 }
-

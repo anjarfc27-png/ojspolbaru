@@ -44,14 +44,26 @@ export function TopBar() {
       try {
         const { data } = await supabase
           .from("journals")
-          .select("id, title, path")
+          .select("*")
           .order("created_at", { ascending: true });
-        type JournalRow = { id: string; title: string; path: string };
-        const rows = ((data ?? []) as JournalRow[]).map((r) => ({
-          id: r.id,
-          title: r.title,
-          path: r.path,
+        let rows = ((data ?? []) as Record<string, any>[]).map((r) => ({
+          id: r.id as string,
+          title: (r.title ?? r.name ?? r.journal_title ?? "") as string,
+          path: (r.path ?? r.slug ?? r.journal_path ?? "") as string,
         }));
+        const missingNameIds = rows.filter((j) => !j.title || j.title.trim().length === 0).map((j) => j.id);
+        if (missingNameIds.length) {
+          const { data: js } = await supabase
+            .from("journal_settings")
+            .select("journal_id, setting_value")
+            .eq("setting_name", "name")
+            .in("journal_id", missingNameIds);
+          const nameMap = new Map<string, string>();
+          (js ?? []).forEach((row: any) => {
+            if (row.setting_value) nameMap.set(row.journal_id, row.setting_value as string);
+          });
+          rows = rows.map((j) => ({ ...j, title: j.title || nameMap.get(j.id) || j.path }));
+        }
         setJournals(rows);
       } catch {}
     };

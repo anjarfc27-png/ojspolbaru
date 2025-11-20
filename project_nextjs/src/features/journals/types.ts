@@ -30,6 +30,13 @@ export type JournalSettings = {
   restrictBulkEmails: {
     disabledRoles: string[];
   };
+  workflow?: {
+    submissions: { allowChecklists: boolean; requireMetadataComplete: boolean };
+    review: { allowReviewerRecommendations: boolean; enableReviewForms: boolean };
+    copyediting: { requireChecklist: boolean };
+    production: { allowedGalleyFormats: string[]; enableProofreading: boolean };
+    discussions: { enableEditorialDiscussions: boolean };
+  };
 };
 
 export const DEFAULT_JOURNAL_SETTINGS: JournalSettings = {
@@ -55,6 +62,13 @@ export const DEFAULT_JOURNAL_SETTINGS: JournalSettings = {
   },
   restrictBulkEmails: {
     disabledRoles: [],
+  },
+  workflow: {
+    submissions: { allowChecklists: true, requireMetadataComplete: true },
+    review: { allowReviewerRecommendations: true, enableReviewForms: false },
+    copyediting: { requireChecklist: true },
+    production: { allowedGalleyFormats: ["PDF", "HTML"], enableProofreading: true },
+    discussions: { enableEditorialDiscussions: true },
   },
 };
 

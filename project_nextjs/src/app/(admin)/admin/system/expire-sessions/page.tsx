@@ -15,12 +15,21 @@ export default function ExpireSessionsPage() {
   );
 
   return (
-    <div className="space-y-6">
-      <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-[var(--foreground)]">
+    <div className="space-y-6" style={{
+      gap: '1.5rem'
+    }}>
+      <section className="space-y-4" style={{
+        gap: '1rem'
+      }}>
+        <h2 className="text-xl font-semibold text-gray-900" style={{
+          fontSize: '1.25rem',
+          fontWeight: '600'
+        }}>
           Expire User Sessions
         </h2>
-        <p className="text-sm text-[var(--muted)]">
+        <p className="text-sm text-gray-600" style={{
+          fontSize: '0.875rem'
+        }}>
           Mengakhiri seluruh sesi pengguna yang sedang aktif. Pengguna akan diminta
           login ulang. Gunakan sebelum melakukan upgrade sistem.
         </p>
@@ -35,12 +44,19 @@ export default function ExpireSessionsPage() {
         <FormMessage tone="error">{state.message}</FormMessage>
       )}
 
-      <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] p-5">
-        <p className="text-sm text-[var(--muted)]">
+      <div className="rounded-lg border border-gray-200 bg-gray-50 p-6" style={{
+        padding: '1.5rem'
+      }}>
+        <p className="text-sm text-gray-600 mb-4" style={{
+          fontSize: '0.875rem',
+          marginBottom: '1rem'
+        }}>
           Tindakan ini bersifat langsung dan permanen. Tidak ada notifikasi yang
           dikirim ke pengguna.
         </p>
-        <div className="mt-4 flex gap-3">
+        <div className="flex gap-3" style={{
+          gap: '0.75rem'
+        }}>
           <form action={formAction} className="contents">
             <Button variant="danger" type="submit" loading={pending}>
               Expire semua sesi sekarang

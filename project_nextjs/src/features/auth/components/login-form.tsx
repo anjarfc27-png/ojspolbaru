@@ -13,11 +13,12 @@ import { FormMessage } from "@/components/ui/form-message";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
+import { getRedirectPathByRole } from "@/lib/auth-redirect";
 
 import { loginSchema, type LoginFormValues } from "../schemas";
 
 export function LoginForm() {
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
@@ -45,15 +46,28 @@ export function LoginForm() {
     const { username, password } = values;
 
     try {
-      // For testing, use email directly
-      // In production, you might want to resolve username to email
-      const email = username.includes("@") ? username : `${username}@example.com`;
+      const email = (username || "").trim().toLowerCase();
       
       await login(email, password);
       
-      // Redirect based on role or source
-      if (source && source.startsWith("/")) {
-        router.push(source);
+      // Wait a bit for AuthContext to update
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Get user data after login to determine redirect
+      const response = await fetch('/api/auth/session');
+      if (response.ok) {
+        const data = await response.json();
+        const loggedInUser = data.user;
+        
+        // Redirect based on role or source
+        if (source && source.startsWith("/")) {
+          router.push(source);
+        } else if (loggedInUser) {
+          const redirectPath = getRedirectPathByRole(loggedInUser);
+          router.push(redirectPath);
+        } else {
+          router.push("/dashboard");
+        }
       } else {
         router.push("/dashboard");
       }

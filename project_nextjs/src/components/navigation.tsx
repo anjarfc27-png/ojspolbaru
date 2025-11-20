@@ -22,6 +22,16 @@ export function Navigation() {
             </Link>
             
             <div className="flex space-x-4">
+              {user.roles.some(r => r.role_path === 'manager') && (
+                <Link 
+                  href="/manager" 
+                  className={`px-3 py-2 rounded text-sm font-medium hover:bg-[#003d55] ${
+                    isActive('/manager') ? 'bg-[#003d55]' : ''
+                  }`}
+                >
+                  Manager
+                </Link>
+              )}
               {user.roles.some(r => r.role_path === 'admin') && (
                 <Link 
                   href="/admin" 
@@ -41,6 +51,39 @@ export function Navigation() {
                   }`}
                 >
                   Editorial
+                </Link>
+              )}
+
+              {user.roles.some(r => r.role_path === 'copyeditor') && (
+                <Link 
+                  href="/copyeditor" 
+                  className={`px-3 py-2 rounded text-sm font-medium hover:bg-[#003d55] ${
+                    isActive('/copyeditor') ? 'bg-[#003d55]' : ''
+                  }`}
+                >
+                  Copyeditor
+                </Link>
+              )}
+
+              {user.roles.some(r => r.role_path === 'proofreader') && (
+                <Link 
+                  href="/proofreader" 
+                  className={`px-3 py-2 rounded text-sm font-medium hover:bg-[#003d55] ${
+                    isActive('/proofreader') ? 'bg-[#003d55]' : ''
+                  }`}
+                >
+                  Proofreader
+                </Link>
+              )}
+
+              {user.roles.some(r => r.role_path === 'layout-editor') && (
+                <Link 
+                  href="/layout-editor" 
+                  className={`px-3 py-2 rounded text-sm font-medium hover:bg-[#003d55] ${
+                    isActive('/layout-editor') ? 'bg-[#003d55]' : ''
+                  }`}
+                >
+                  Layout Editor
                 </Link>
               )}
               
@@ -63,6 +106,28 @@ export function Navigation() {
                   }`}
                 >
                   Reviewer
+                </Link>
+              )}
+
+              {user.roles.some(r => r.role_path === 'subscription-manager') && (
+                <Link 
+                  href="/subscription-manager" 
+                  className={`px-3 py-2 rounded text-sm font-medium hover:bg-[#003d55] ${
+                    isActive('/subscription-manager') ? 'bg-[#003d55]' : ''
+                  }`}
+                >
+                  Subscription
+                </Link>
+              )}
+
+              {user.roles.some(r => r.role_path === 'reader') && (
+                <Link 
+                  href="/reader" 
+                  className={`px-3 py-2 rounded text-sm font-medium hover:bg-[#003d55] ${
+                    isActive('/reader') ? 'bg-[#003d55]' : ''
+                  }`}
+                >
+                  Reader
                 </Link>
               )}
             </div>

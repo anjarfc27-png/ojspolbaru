@@ -5,11 +5,11 @@ import { NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 type RouteParams = {
-  params: { submissionId: string };
+  params: Promise<{ submissionId: string }>;
 };
 
-export async function POST(request: Request, { params }: RouteParams) {
-  const submissionId = params.submissionId;
+export async function POST(request: Request, context: RouteParams) {
+  const { submissionId } = await context.params;
   if (!submissionId) {
     return NextResponse.json({ ok: false, message: "Submission tidak ditemukan." }, { status: 400 });
   }

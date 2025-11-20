@@ -7,11 +7,11 @@ import type { JournalSettings } from "@/features/journals/types";
 import { JOURNAL_ROLE_OPTIONS } from "@/features/journals/types";
 
 type RouteParams = {
-  params: { journalId: string };
+  params: Promise<{ journalId: string }>;
 };
 
-export async function GET(_request: Request, { params }: RouteParams) {
-  const journalId = params.journalId;
+export async function GET(_request: Request, context: RouteParams) {
+  const { journalId } = await context.params;
   if (!journalId) {
     return NextResponse.json({ ok: false, message: "Jurnal tidak ditemukan." }, { status: 400 });
   }
@@ -24,8 +24,8 @@ export async function GET(_request: Request, { params }: RouteParams) {
   }
 }
 
-export async function POST(request: Request, { params }: RouteParams) {
-  const journalId = params.journalId;
+export async function POST(request: Request, context: RouteParams) {
+  const { journalId } = await context.params;
   if (!journalId) {
     return NextResponse.json({ ok: false, message: "Jurnal tidak ditemukan." }, { status: 400 });
   }
@@ -50,7 +50,7 @@ export async function POST(request: Request, { params }: RouteParams) {
 async function loadSettings(journalId: string): Promise<JournalSettings> {
   const supabase = getSupabaseAdminClient();
   const [journal, profile, indexing, theme, bulkEmails] = await Promise.all([
-    supabase.from("journals").select("title, description").eq("id", journalId).single(),
+    supabase.from("journals").select("*").eq("id", journalId).single(),
     supabase.from("journal_profiles").select("*").eq("journal_id", journalId).single(),
     supabase.from("journal_indexing").select("*").eq("journal_id", journalId).single(),
     supabase.from("journal_theme_settings").select("*").eq("journal_id", journalId).single(),
@@ -62,13 +62,17 @@ async function loadSettings(journalId: string): Promise<JournalSettings> {
   }
 
   const context = {
-    name: journal.data.title,
+    name: (journal.data as any).title ?? (journal.data as any).name ?? (journal.data as any).journal_title ?? "",
     initials: profile.data?.initials ?? "",
     abbreviation: profile.data?.abbreviation ?? "",
     publisher: profile.data?.publisher ?? "",
     issnOnline: profile.data?.online_issn ?? "",
     issnPrint: profile.data?.print_issn ?? "",
-    focusScope: profile.data?.focus_scope ?? journal.data.description ?? "",
+    focusScope:
+      profile.data?.focus_scope ??
+      (journal.data as any).description ??
+      (journal.data as any).desc ??
+      "",
   };
 
   const search = {

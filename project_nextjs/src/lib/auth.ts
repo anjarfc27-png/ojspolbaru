@@ -47,7 +47,7 @@ export async function getCurrentUser(request: NextRequest): Promise<User | null>
   }
 }
 
-function getRolePath(userGroupName: string): string {
+export function getRolePath(userGroupName: string): string {
   const rolePaths: Record<string, string> = {
     'Site admin': 'admin',
     'Manager': 'manager',

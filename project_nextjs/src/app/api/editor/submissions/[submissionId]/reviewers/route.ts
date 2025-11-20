@@ -5,11 +5,11 @@ import { NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 type RouteParams = {
-  params: { submissionId: string };
+  params: Promise<{ submissionId: string }>;
 };
 
-export async function POST(request: Request, { params }: RouteParams) {
-  const submissionId = params.submissionId;
+export async function POST(request: Request, context: RouteParams) {
+  const { submissionId } = await context.params;
   const body = (await request.json().catch(() => null)) as { roundId?: string; reviewerId?: string; dueDate?: string } | null;
   const roundId = body?.roundId;
   const reviewerId = body?.reviewerId;
@@ -40,8 +40,8 @@ export async function POST(request: Request, { params }: RouteParams) {
   return NextResponse.json({ ok: true });
 }
 
-export async function DELETE(request: Request, { params }: RouteParams) {
-  const submissionId = params.submissionId;
+export async function DELETE(request: Request, context: RouteParams) {
+  const { submissionId } = await context.params;
   const body = (await request.json().catch(() => null)) as { reviewId?: string } | null;
   const reviewId = body?.reviewId;
 

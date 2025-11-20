@@ -13,12 +13,21 @@ export default function ClearTemplateCachePage() {
   );
 
   return (
-    <div className="space-y-6">
-      <header className="space-y-2">
-        <h2 className="text-xl font-semibold text-[var(--foreground)]">
+    <div className="space-y-6" style={{
+      gap: '1.5rem'
+    }}>
+      <header className="space-y-2" style={{
+        gap: '0.5rem'
+      }}>
+        <h2 className="text-xl font-semibold text-gray-900" style={{
+          fontSize: '1.25rem',
+          fontWeight: '600'
+        }}>
           Clear Template Cache
         </h2>
-        <p className="text-sm text-[var(--muted)]">
+        <p className="text-sm text-gray-600" style={{
+          fontSize: '0.875rem'
+        }}>
           Hapus versi cache dari template HTML. Berguna setelah melakukan perubahan tampilan.
         </p>
       </header>
@@ -29,8 +38,13 @@ export default function ClearTemplateCachePage() {
         </FormMessage>
       )}
 
-      <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] p-5">
-        <p className="text-sm text-[var(--muted)]">
+      <div className="rounded-lg border border-gray-200 bg-gray-50 p-6" style={{
+        padding: '1.5rem'
+      }}>
+        <p className="text-sm text-gray-600 mb-4" style={{
+          fontSize: '0.875rem',
+          marginBottom: '1rem'
+        }}>
           Proses ini hanya memengaruhi file template. Tidak ada konten jurnal yang berubah.
         </p>
         <form action={formAction}>

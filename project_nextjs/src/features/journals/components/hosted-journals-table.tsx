@@ -54,49 +54,75 @@ export function HostedJournalsTable({ journals }: Props) {
   };
 
   return (
-    <div className="overflow-hidden rounded-lg border border-[var(--border)] bg-white shadow-sm">
-      <div className="flex items-center justify-between border-b border-[var(--border)] bg-[var(--surface-muted)] px-4 py-3">
-        <p className="text-sm font-semibold text-[var(--foreground)]">Hosted Journals</p>
+    <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+      <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-6 py-4" style={{
+        padding: '1rem 1.5rem'
+      }}>
+        <p className="text-base font-semibold text-gray-900" style={{
+          fontSize: '1rem',
+          fontWeight: '600'
+        }}>Hosted Journals</p>
         <Button size="sm" onClick={() => setModalState({ type: "edit", mode: "create" })}>
           Create Journal
         </Button>
       </div>
 
       {feedback && (
-        <div className="border-b border-[var(--border)] px-4 py-3">
+        <div className="border-b border-gray-200 px-6 py-4" style={{
+          padding: '1rem 1.5rem'
+        }}>
           <FormMessage tone={feedback.tone}>{feedback.message}</FormMessage>
         </div>
       )}
 
       {emptyState ? (
-        <div className="px-6 py-10 text-center text-sm text-[var(--muted)]">
+        <div className="px-6 py-10 text-center text-base text-gray-600" style={{
+          padding: '2.5rem 1.5rem',
+          fontSize: '1rem'
+        }}>
           Belum ada jurnal yang di-host. Gunakan tombol <strong>Create Journal</strong> untuk menambahkan.
         </div>
       ) : (
-        <table className="min-w-full divide-y divide-[var(--border)]">
-          <thead className="bg-[var(--surface-muted)]">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
             <tr>
-              <th className="w-12 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--muted)]" />
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+              <th className="w-12 px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-600" style={{
+                padding: '1rem 1.5rem',
+                fontSize: '0.75rem'
+              }} />
+              <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-600" style={{
+                padding: '1rem 1.5rem',
+                fontSize: '0.75rem'
+              }}>
                 Name
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+              <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-600" style={{
+                padding: '1rem 1.5rem',
+                fontSize: '0.75rem'
+              }}>
                 Path
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+              <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-600" style={{
+                padding: '1rem 1.5rem',
+                fontSize: '0.75rem'
+              }}>
                 Visibility
               </th>
-              <th className="px-4 py-3" />
+              <th className="px-6 py-4" style={{
+                padding: '1rem 1.5rem'
+              }} />
             </tr>
           </thead>
-          <tbody className="divide-y divide-[var(--border)]">
+          <tbody className="divide-y divide-gray-200 bg-white">
             {journals.map((journal) => {
               const isExpanded = expandedRow === journal.id;
               return (
                 <tr key={journal.id} className="group">
-                  <td className="align-top px-4 py-3">
+                  <td className="align-top px-6 py-4" style={{
+                    padding: '1rem 1.5rem'
+                  }}>
                     <button
-                      className="rounded border border-transparent p-1 text-[var(--muted)] transition-colors hover:border-[var(--border)]"
+                      className="rounded border border-transparent p-1 text-gray-600 transition-colors hover:border-gray-300"
                       aria-expanded={isExpanded}
                       aria-controls={`journal-${journal.id}-details`}
                       onClick={() => setExpandedRow(isExpanded ? null : journal.id)}
@@ -104,13 +130,29 @@ export function HostedJournalsTable({ journals }: Props) {
                       {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                     </button>
                   </td>
-                  <td className="px-4 py-4">
-                    <div className="text-sm font-semibold text-[var(--foreground)]">{journal.name}</div>
-                    <p className="mt-1 text-sm text-[var(--muted)]">{journal.description}</p>
+                  <td className="px-6 py-4" style={{
+                    padding: '1rem 1.5rem'
+                  }}>
+                    <div className="text-base font-semibold text-gray-900" style={{
+                      fontSize: '1rem',
+                      fontWeight: '600'
+                    }}>{journal.name}</div>
+                    <p className="mt-1 text-sm text-gray-600" style={{
+                      marginTop: '0.25rem',
+                      fontSize: '0.875rem'
+                    }}>{journal.description}</p>
                   </td>
-                  <td className="px-4 py-4 text-sm text-[var(--foreground)]">{journal.path}</td>
-                  <td className="px-4 py-4">
-                    <span className="inline-flex items-center gap-2 rounded-full bg-[var(--surface-muted)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                  <td className="px-6 py-4 text-base text-gray-900" style={{
+                    padding: '1rem 1.5rem',
+                    fontSize: '1rem'
+                  }}>{journal.path}</td>
+                  <td className="px-6 py-4" style={{
+                    padding: '1rem 1.5rem'
+                  }}>
+                    <span className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-gray-700" style={{
+                      padding: '0.25rem 0.75rem',
+                      fontSize: '0.75rem'
+                    }}>
                       {journal.isPublic ? (
                         <>
                           <Globe2 size={14} /> Public
@@ -122,11 +164,16 @@ export function HostedJournalsTable({ journals }: Props) {
                       )}
                     </span>
                   </td>
-                  <td className="px-4 py-4">
+                  <td className="px-6 py-4" style={{
+                    padding: '1rem 1.5rem'
+                  }}>
                     {isExpanded && (
                       <div
                         id={`journal-${journal.id}-details`}
-                        className="rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-3 text-sm"
+                        className="rounded-md border border-gray-200 bg-gray-50 px-6 py-4"
+                        style={{
+                          padding: '1rem 1.5rem'
+                        }}
                       >
                         <Tabs
                           defaultValue={
@@ -158,11 +205,17 @@ export function HostedJournalsTable({ journals }: Props) {
                             <TabsTrigger value="users">Users</TabsTrigger>
                           </TabsList>
                         </Tabs>
-                        <div className="mt-4 grid gap-2 text-sm text-[var(--muted)]">
+                        <div className="mt-4 grid gap-2 text-base text-gray-600" style={{
+                          marginTop: '1rem',
+                          gap: '0.5rem',
+                          fontSize: '1rem'
+                        }}>
                           <p>
                             Pilih tindakan untuk <strong>{journal.name}</strong>.
                           </p>
-                          <div className="flex flex-wrap gap-2">
+                          <div className="flex flex-wrap gap-2" style={{
+                            gap: '0.5rem'
+                          }}>
                             <Button size="sm" onClick={() => setModalState({ type: "edit", journal, mode: "edit" })}>
                               Edit
                             </Button>
@@ -288,7 +341,9 @@ export function HostedJournalsTable({ journals }: Props) {
             </>
           }
         >
-          <p className="text-sm text-[var(--foreground)]">
+          <p className="text-base text-gray-900" style={{
+            fontSize: '1rem'
+          }}>
             Apakah Anda yakin ingin menghapus jurnal{" "}
             <strong>{deleteTarget.name}</strong> beserta seluruh kontennya?
           </p>

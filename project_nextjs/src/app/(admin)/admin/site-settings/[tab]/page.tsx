@@ -51,16 +51,24 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mb-8 space-y-4">
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold text-[var(--foreground)]">
+    <div className="mb-8 space-y-4" style={{ marginBottom: '2rem' }}>
+      <div className="mb-4" style={{ marginBottom: '1rem' }}>
+        <h2 className="text-lg font-semibold text-gray-900" style={{
+          fontSize: '1.125rem',
+          fontWeight: '600',
+          color: '#111827'
+        }}>
           {title}
         </h2>
         {description && (
-          <p className="mt-1 text-sm text-[var(--muted)]">{description}</p>
+          <p className="mt-1 text-base text-gray-600" style={{
+            marginTop: '0.25rem',
+            fontSize: '0.875rem',
+            color: '#4B5563'
+          }}>{description}</p>
         )}
       </div>
-      <div className="space-y-4">{children}</div>
+      <div className="space-y-4" style={{ gap: '1rem' }}>{children}</div>
     </div>
   );
 }
@@ -74,7 +82,11 @@ function SiteSetupTab({ initial }: { initial: Awaited<ReturnType<typeof getSiteS
       >
         <form action={updateSiteSettingsAction} className="space-y-4">
           <div>
-            <Label htmlFor="site_name" className="mb-2 block text-sm font-medium">
+            <Label htmlFor="site_name" className="mb-2 block font-medium" style={{
+              marginBottom: '0.5rem',
+              fontSize: '0.875rem',
+              fontWeight: '500'
+            }}>
               Site name <span className="text-[#b91c1c]">*</span>
             </Label>
             <Input id="site_name" name="site_name" defaultValue={initial.site_name} className="max-w-md" />
@@ -94,7 +106,11 @@ function SiteSetupTab({ initial }: { initial: Awaited<ReturnType<typeof getSiteS
               name="intro"
               rows={4}
               defaultValue={initial.intro}
-              className="w-full max-w-2xl rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm shadow-inner focus-visible:border-[var(--primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-muted)]"
+              className="w-full max-w-2xl rounded-md border border-gray-300 bg-white px-3 py-2 shadow-inner focus-visible:border-[#006798] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#006798]/20"
+              style={{
+                fontSize: '0.875rem',
+                padding: '0.5rem 0.75rem'
+              }}
             />
           </div>
           <div className="flex justify-end">
@@ -176,7 +192,12 @@ function AppearanceTab({ initial }: { initial: Awaited<ReturnType<typeof getSite
                 id="theme"
                 name="theme"
                 defaultValue={initial.theme}
-                className="h-11 w-full rounded-md border border-[var(--border)] bg-white px-3 text-sm text-[var(--foreground)] shadow-inner focus-visible:border-[var(--primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-muted)]"
+                className="h-11 w-full rounded-md border border-gray-300 bg-white px-3 text-gray-900 shadow-inner focus-visible:border-[#006798] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#006798]/20"
+          style={{
+            fontSize: '0.875rem',
+            height: '2.75rem',
+            padding: '0.5rem 0.75rem'
+          }}
               >
                 <option value="default">Default</option>
                 <option value="classic">Classic</option>
@@ -203,7 +224,11 @@ function AppearanceTab({ initial }: { initial: Awaited<ReturnType<typeof getSite
               name="footer_html"
               rows={4}
               defaultValue={initial.footer_html}
-              className="w-full max-w-2xl rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm shadow-inner focus-visible:border-[var(--primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-muted)]"
+              className="w-full max-w-2xl rounded-md border border-gray-300 bg-white px-3 py-2 shadow-inner focus-visible:border-[#006798] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#006798]/20"
+              style={{
+                fontSize: '0.875rem',
+                padding: '0.5rem 0.75rem'
+              }}
             />
           </div>
           <div className="flex justify-end">
@@ -227,7 +252,11 @@ function LanguagesTab() {
             (locale) => (
               <label
                 key={locale}
-                className="flex items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-2 text-sm"
+                className="flex items-center gap-2 rounded-md border border-gray-300 bg-gray-50 px-4 py-2"
+                style={{
+                  fontSize: '0.875rem',
+                  padding: '0.5rem 1rem'
+                }}
               >
                 <input type="checkbox" defaultChecked={locale !== "Français"} />
                 {locale}
@@ -253,7 +282,12 @@ function LanguagesTab() {
         <Label htmlFor="primary-locale">Primary Locale</Label>
         <select
           id="primary-locale"
-          className="h-11 w-full rounded-md border border-[var(--border)] bg-white px-3 text-sm text-[var(--foreground)] shadow-inner focus-visible:border-[var(--primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-muted)]"
+          className="h-11 w-full rounded-md border border-gray-300 bg-white px-3 text-gray-900 shadow-inner focus-visible:border-[#006798] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#006798]/20"
+          style={{
+            fontSize: '0.875rem',
+            height: '2.75rem',
+            padding: '0.5rem 0.75rem'
+          }}
         >
           <option>Bahasa Indonesia</option>
           <option>English</option>
@@ -289,13 +323,23 @@ function PluginsTab({ items }: { items: Awaited<ReturnType<typeof getSitePlugins
                 className="flex flex-col gap-4 rounded-md border border-[var(--border)] bg-[var(--surface-muted)] p-4 md:flex-row md:items-center md:justify-between"
               >
                 <div>
-                  <h3 className="text-sm font-semibold text-[var(--foreground)]">{plugin.name}</h3>
-                  <p className="mt-1 text-sm text-[var(--muted)]">{plugin.description}</p>
+                  <h3 className="font-semibold text-gray-900" style={{
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    color: '#111827'
+                  }}>{plugin.name}</h3>
+                  <p className="mt-1 text-gray-600" style={{
+                    marginTop: '0.25rem',
+                    fontSize: '0.875rem',
+                    color: '#4B5563'
+                  }}>{plugin.description}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <form action={toggleSitePluginAction} className="flex items-center gap-2">
                     <input type="hidden" name="plugin_id" value={plugin.id} />
-                    <Label className="mb-0 flex items-center gap-2 text-sm">
+                    <Label className="mb-0 flex items-center gap-2" style={{
+                      fontSize: '0.875rem'
+                    }}>
                       <input
                         type="checkbox"
                         name="enabled"
@@ -355,7 +399,11 @@ function NavigationMenusTab() {
             {menu.items.map((item) => (
               <div
                 key={item}
-                className="flex items-center justify-between rounded-md border border-[var(--border)] bg-white px-4 py-3 text-sm"
+                className="flex items-center justify-between rounded-md border border-gray-300 bg-white px-4 py-3"
+                style={{
+                  fontSize: '0.875rem',
+                  padding: '0.75rem 1rem'
+                }}
               >
                 <span>{item}</span>
                 <div className="flex gap-2">
@@ -391,7 +439,10 @@ function BulkEmailsTab() {
         title="Bulk Email Permissions"
         description="Tentukan jurnal yang diizinkan menggunakan fitur email massal."
       >
-        <p className="text-sm text-[var(--muted)]">
+        <p className="text-base text-gray-600" style={{
+          fontSize: '0.875rem',
+          color: '#4B5563'
+        }}>
           Fitur email massal dapat membantu mengirim pemberitahuan ke grup user
           tertentu. Pastikan mematuhi regulasi anti-spam.
         </p>
@@ -401,7 +452,11 @@ function BulkEmailsTab() {
               key={journal.id}
               className="flex items-center justify-between rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-3"
             >
-              <span className="text-sm font-semibold text-[var(--foreground)]">
+              <span className="font-semibold text-gray-900" style={{
+                fontSize: '0.875rem',
+                fontWeight: '600',
+                color: '#111827'
+              }}>
                 {journal.name}
               </span>
               <input
@@ -418,7 +473,10 @@ function BulkEmailsTab() {
       </Section>
 
       <Section title="Catatan Kepatuhan">
-        <p className="text-sm text-[var(--muted)]">
+        <p className="text-base text-gray-600" style={{
+          fontSize: '0.875rem',
+          color: '#4B5563'
+        }}>
           Penggunaan email massal harus memperhatikan peraturan anti-spam dan
           kebijakan privasi. Pastikan setiap pengguna telah memberikan
           persetujuan sebelum menerima pesan massal.

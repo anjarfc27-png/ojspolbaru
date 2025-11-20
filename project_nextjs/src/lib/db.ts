@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { getRolePath } from './auth'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -240,21 +241,4 @@ export async function getUserRoles(userId: string) {
     console.error('Exception in getUserRoles:', error)
     return []
   }
-}
-
-function getRolePath(userGroupName: string): string {
-  const rolePaths: Record<string, string> = {
-    'Site admin': 'admin',
-    'Manager': 'manager',
-    'Editor': 'editor',
-    'Section editor': 'editor', // Map Section editor ke editor path untuk OJS compatibility
-    'Copyeditor': 'copyeditor',
-    'Proofreader': 'proofreader',
-    'Layout Editor': 'layout-editor',
-    'Author': 'author',
-    'Reviewer': 'reviewer',
-    'Reader': 'reader',
-    'Subscription manager': 'subscription-manager'
-  }
-  return rolePaths[userGroupName] || 'reader'
 }

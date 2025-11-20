@@ -3,9 +3,14 @@
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
+import { ChevronDown, Bell, User, Home, BookOpen, LogOut } from "lucide-react";
 
 import { EditorSideNav } from "@/components/editor/side-nav";
 import { useAuth } from "@/contexts/AuthContext";
+import { Dropdown, DropdownItem, DropdownSection } from "@/components/ui/dropdown";
+import { useSupabase } from "@/providers/supabase-provider";
+import { getRedirectPathByRole } from "@/lib/auth-redirect";
 
 type Props = {
   children: ReactNode;
@@ -14,11 +19,46 @@ type Props = {
 export default function EditorLayout({ children }: Props) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, loading } = useAuth();
+  const { user, loading, logout } = useAuth();
   const [authorized, setAuthorized] = useState<boolean | null>(null);
+  const supabase = useSupabase();
+  const [journals, setJournals] = useState<{ id: string; title: string; path: string }[]>([]);
   
   // Check if we're on a submission detail page - if so, don't wrap with sidebar
   const isSubmissionDetail = pathname?.match(/\/editor\/submissions\/[^/]+$/);
+
+  // Fetch journals for dropdown
+  useEffect(() => {
+    const fetchJournals = async () => {
+      try {
+        const { data } = await supabase
+          .from("journals")
+          .select("*")
+          .order("created_at", { ascending: true });
+        let rows = ((data ?? []) as Record<string, any>[]).map((r) => ({
+          id: r.id as string,
+          title: (r.title ?? r.name ?? r.journal_title ?? "") as string,
+          path: (r.path ?? r.slug ?? r.journal_path ?? "") as string,
+        }));
+        const missingNameIds = rows.filter((j) => !j.title || j.title.trim().length === 0).map((j) => j.id);
+        if (missingNameIds.length) {
+          const { data: js } = await supabase
+            .from("journal_settings")
+            .select("journal_id, setting_value")
+            .eq("setting_name", "name")
+            .in("journal_id", missingNameIds);
+          const nameMap = new Map((js?.data ?? []).map((j) => [j.journal_id, j.setting_value]));
+          rows = rows.map((j) => (nameMap.has(j.id) ? { ...j, title: nameMap.get(j.id) as string } : j));
+        }
+        setJournals(rows.filter((j) => j.title && j.title.trim().length > 0));
+      } catch (error) {
+        console.error("Error fetching journals:", error);
+      }
+    };
+    if (user) {
+      fetchJournals();
+    }
+  }, [supabase, user]);
 
   useEffect(() => {
     if (loading) {
@@ -33,7 +73,9 @@ export default function EditorLayout({ children }: Props) {
     const canEdit = user.roles?.some(r => r.role_path === "editor" || r.role_path === "admin");
     if (!canEdit) {
       setAuthorized(false);
-      router.replace("/dashboard");
+      // Redirect to role-appropriate route
+      const redirectPath = getRedirectPathByRole(user);
+      router.replace(redirectPath);
       return;
     }
     setAuthorized(true);
@@ -54,71 +96,138 @@ export default function EditorLayout({ children }: Props) {
 
   return (
     <div className="pkp_structure_page" style={{minHeight: '100vh', backgroundColor: '#eaedee'}}>
-      {/* Header - Single header like OJS original */}
-      <header className="pkp_structure_head" style={{backgroundColor: '#002C40', color: 'white', padding: '1rem 2rem', borderBottom: '1px solid rgba(255,255,255,0.2)'}}>
-        <div className="pkp_head_wrapper">
-          <div className="pkp_site_name_wrapper">
-            <h1 className="pkp_site_name">
-              <a href="/" style={{color: 'white', textDecoration: 'none', fontSize: '1.5rem', fontWeight: 'normal'}}>
-                OJS
-              </a>
-            </h1>
-            <div className="pkp_site_name_text" style={{fontSize: '0.875rem', marginTop: '0.25rem', opacity: '0.9'}}>
-              OPEN JOURNAL SYSTEMS
-            </div>
+      {/* Top Bar - Dark Blue */}
+      <header className="bg-[#002C40] text-white" style={{backgroundColor: '#002C40'}}>
+        <div className="px-6 py-4 flex items-center justify-between" style={{padding: '1rem 1.5rem'}}>
+          {/* Left: Open Journal Systems */}
+          <div className="flex items-center gap-6">
+            <Dropdown
+              button={
+                <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+                  <span className="text-white text-base font-medium" style={{fontSize: '1rem'}}>Open Journal Systems</span>
+                  <ChevronDown className="h-4 w-4 text-white" />
+                </div>
+              }
+              align="left"
+            >
+              <DropdownSection>
+                <DropdownItem href="/admin" icon={<Home className="h-4 w-4" />}>
+                  Site Administration
+                </DropdownItem>
+              </DropdownSection>
+              {journals.length > 0 && (
+                <DropdownSection>
+                  {journals.map((journal) => (
+                    <DropdownItem 
+                      key={journal.id} 
+                      href={journal.path ? `/journal/${journal.path}/dashboard` : `/journal/${journal.id}`} 
+                      icon={<BookOpen className="h-4 w-4" />}
+                    >
+                      {journal.title}
+                    </DropdownItem>
+                  ))}
+                </DropdownSection>
+              )}
+            </Dropdown>
           </div>
-          
-          {/* User info and logout - right side */}
-          <div className="pkp_user_menu" style={{position: 'absolute', right: '2rem', top: '1rem', display: 'flex', alignItems: 'center', gap: '1rem'}}>
-            <span style={{fontSize: '0.875rem'}}>{user?.full_name || user?.username}</span>
-            <a href="/logout" style={{color: 'white', textDecoration: 'none', fontSize: '0.875rem'}}>Logout</a>
+
+          {/* Right: Bell and User */}
+          <div className="flex items-center gap-6">
+            {/* Bell Icon with Dropdown */}
+            <Dropdown
+              button={
+                <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity relative">
+                  <Bell className="h-5 w-5 text-white" />
+                </div>
+              }
+              align="right"
+            >
+              <DropdownSection>
+                <DropdownItem href="#" icon={<Bell className="h-4 w-4" />}>
+                  No new notifications
+                </DropdownItem>
+              </DropdownSection>
+            </Dropdown>
+
+            {/* User with Dropdown */}
+            <Dropdown
+              button={
+                <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+                  <User className="h-5 w-5 text-white" />
+                </div>
+              }
+              align="right"
+            >
+              <DropdownSection>
+                <DropdownItem 
+                  onClick={async () => {
+                    await logout();
+                    router.push('/login');
+                  }}
+                  icon={<User className="h-4 w-4" />}
+                >
+                  {user?.full_name || user?.username || 'User'}
+                </DropdownItem>
+                <DropdownItem 
+                  onClick={async () => {
+                    await logout();
+                    router.push('/login');
+                  }}
+                  icon={<LogOut className="h-4 w-4" />}
+                >
+                  Logout
+                </DropdownItem>
+              </DropdownSection>
+            </Dropdown>
           </div>
         </div>
       </header>
       
-      {/* Navigation Bar */}
-      <nav className="pkp_structure_nav" style={{backgroundColor: '#006798', padding: '0.5rem 2rem', borderTop: '1px solid rgba(255,255,255,0.2)'}}>
-        <ul className="pkp_nav_list" style={{listStyle: 'none', margin: 0, padding: 0, display: 'flex', gap: '2rem'}}>
-          <li><a href="/editor" style={{color: 'white', textDecoration: 'none', fontSize: '0.875rem'}}>Editorial</a></li>
-          <li><a href="/editor/submissions" style={{color: 'white', textDecoration: 'none', fontSize: '0.875rem'}}>Submissions</a></li>
-          <li><a href="/editor/issues" style={{color: 'white', textDecoration: 'none', fontSize: '0.875rem'}}>Issues</a></li>
-          <li><a href="/editor/statistics" style={{color: 'white', textDecoration: 'none', fontSize: '0.875rem'}}>Statistics</a></li>
-          <li><a href="/editor/settings" style={{color: 'white', textDecoration: 'none', fontSize: '0.875rem'}}>Settings</a></li>
-        </ul>
-      </nav>
       
       {/* Main Content Area - Single sidebar only */}
       <div className="pkp_structure_content_wrapper" style={{display: 'flex', minHeight: 'calc(100vh - 120px)'}}>
         {/* Single Sidebar - Left side */}
-        <div className="pkp_structure_sidebar left" style={{width: '250px', backgroundColor: '#006798', color: 'white', borderRight: '1px solid #ddd'}}>
+        <div className="pkp_structure_sidebar left" style={{width: '300px', backgroundColor: '#002C40', color: 'white', borderRight: '1px solid rgba(255,255,255,0.1)'}}>
+          {/* Sidebar Header */}
+          <div style={{padding: '1.5rem 1.25rem', borderBottom: '1px solid rgba(255,255,255,0.1)'}}>
+            {/* iamJOS Logo - Smaller */}
+            <div className="mb-4" style={{marginBottom: '1rem'}}>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-white font-bold" style={{
+                  fontSize: '1.75rem',
+                  lineHeight: '1',
+                  fontWeight: 'bold',
+                  letterSpacing: '-0.02em'
+                }}>
+                  iam
+                </span>
+                <span className="text-white font-bold" style={{
+                  fontSize: '2rem',
+                  lineHeight: '1',
+                  fontWeight: 'bold',
+                  letterSpacing: '-0.02em'
+                }}>
+                  JOS
+                </span>
+              </div>
+            </div>
+          </div>
           <EditorSideNav />
         </div>
         
         {/* Main Content */}
-        <main className="pkp_structure_main" style={{flex: 1, backgroundColor: 'white', padding: '2rem'}}>
+        <main className="pkp_structure_main" style={{
+          flex: 1, 
+          backgroundColor: '#ffffff', 
+          padding: '2.5rem',
+          color: '#333333',
+          fontSize: '1rem',
+          lineHeight: '1.6'
+        }}>
           {children}
         </main>
       </div>
       
-      <style jsx>{`
-        .pkp_structure_head {
-          position: relative;
-        }
-        .pkp_structure_nav {
-          border-top: 1px solid rgba(255,255,255,0.2);
-        }
-        .pkp_structure_content_wrapper {
-          display: flex;
-        }
-        .pkp_user_menu {
-          position: absolute;
-          right: 2rem;
-          top: 1rem;
-        }
-        .pkp_nav_list a:hover {
-          text-decoration: underline;
-        }
-      `}</style>
     </div>
   );
 }

@@ -2,8 +2,8 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import { 
   ChevronDown, 
   Menu, 
@@ -18,19 +18,58 @@ import {
   LogOut,
   User,
   HelpCircle,
-  Eye
+  Eye,
+  Globe
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dropdown, DropdownItem, DropdownSection } from "@/components/ui/dropdown";
+import { useSupabase } from "@/providers/supabase-provider";
 
 export default function AuthorLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { user, logout } = useAuth();
+  const { user, logout, loading } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const supabase = useSupabase();
+  const [journals, setJournals] = useState<{ id: string; title: string; path: string }[]>([]);
+
+  // Fetch journals for dropdown
+  useEffect(() => {
+    const fetchJournals = async () => {
+      try {
+        const { data } = await supabase
+          .from("journals")
+          .select("*")
+          .order("created_at", { ascending: true });
+        let rows = ((data ?? []) as Record<string, any>[]).map((r) => ({
+          id: r.id as string,
+          title: (r.title ?? r.name ?? r.journal_title ?? "") as string,
+          path: (r.path ?? r.slug ?? r.journal_path ?? "") as string,
+        }));
+        const missingNameIds = rows.filter((j) => !j.title || j.title.trim().length === 0).map((j) => j.id);
+        if (missingNameIds.length) {
+          const { data: js } = await supabase
+            .from("journal_settings")
+            .select("journal_id, setting_value")
+            .eq("setting_name", "name")
+            .in("journal_id", missingNameIds);
+          const nameMap = new Map((js?.data ?? []).map((j) => [j.journal_id, j.setting_value]));
+          rows = rows.map((j) => (nameMap.has(j.id) ? { ...j, title: nameMap.get(j.id) as string } : j));
+        }
+        setJournals(rows.filter((j) => j.title && j.title.trim().length > 0));
+      } catch (error) {
+        console.error("Error fetching journals:", error);
+      }
+    };
+    if (user) {
+      fetchJournals();
+    }
+  }, [supabase, user]);
 
   const navigation = [
     {
@@ -85,144 +124,282 @@ export default function AuthorLayout({
     }
   ];
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#eaedee]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#002C40] mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!user) {
-    return <div>Loading...</div>;
+    router.push('/login?source=' + encodeURIComponent(window.location.pathname));
+    return null;
   }
 
   return (
-    <div className="min-h-screen bg-[#eaedee]">
-      {/* Header */}
-      <header className="bg-[#002C40] text-white sticky top-0 z-50">
-        <div className="px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            {/* Left side */}
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="lg:hidden p-2 rounded-md hover:bg-white hover:bg-opacity-10"
-              >
-                {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              </button>
-              
-              <Link href="/author/dashboard" className="flex items-center space-x-3">
-                <div className="bg-white p-2 rounded">
-                  <FileText className="h-6 w-6 text-[#002C40]" />
+    <div className="min-h-screen bg-[#eaedee]" style={{backgroundColor: '#eaedee'}}>
+      {/* Header - Blue OJS Theme - Sama seperti Editor */}
+      <header className="bg-[#002C40] text-white sticky top-0 z-50 shadow-lg" style={{
+        backgroundColor: '#002C40',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+      }}>
+        <div className="px-6 py-5 flex items-center justify-between" style={{padding: '1.25rem 1.5rem'}}>
+          {/* Left side */}
+          <div className="flex items-center gap-6">
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="lg:hidden p-2 rounded-md hover:bg-white hover:bg-opacity-20 transition-colors"
+            >
+              {sidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+            
+            <Dropdown
+              button={
+                <div className="flex items-center gap-2 cursor-pointer hover:opacity-90 transition-opacity">
+                  <span className="text-white font-semibold" style={{fontSize: '1.125rem', fontWeight: '600'}}>Open Journal Systems</span>
+                  <ChevronDown className="h-5 w-5 text-white" />
                 </div>
-                <div>
-                  <h1 className="text-xl font-bold">
-                    {pathname.startsWith('/reviewer') ? 'Reviewer Dashboard' : 'Author Dashboard'}
-                  </h1>
-                  <p className="text-xs opacity-80">
-                    {pathname.startsWith('/reviewer') ? 'Review & Evaluate Manuscripts' : 'Submit & Track Manuscripts'}
-                  </p>
-                </div>
-              </Link>
-            </div>
-
-            {/* Right side */}
-            <div className="flex items-center space-x-4">
-              {/* Notifications */}
-              <Button variant="ghost" size="sm" className="text-white hover:bg-white hover:bg-opacity-10 relative">
-                <Bell className="h-4 w-4" />
-                <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 text-xs bg-red-500">
-                  2
-                </Badge>
-              </Button>
-
-              {/* User info */}
-              <div className="hidden sm:flex items-center space-x-3">
-                <div className="text-right">
-                  <p className="text-sm font-medium">{user.full_name || user.username}</p>
-                  <p className="text-xs opacity-80">
-                    {pathname.startsWith('/reviewer') ? 'Reviewer' : 'Author'}
-                  </p>
-                </div>
-                <div className="w-8 h-8 bg-[#006798] rounded-full flex items-center justify-center">
-                  <span className="text-sm font-medium">
-                    {(user.full_name || user.username).charAt(0).toUpperCase()}
-                  </span>
-                </div>
+              }
+              align="left"
+            >
+              <div className="bg-white rounded-md border border-gray-200 shadow-lg min-w-[250px] py-1">
+                <Link 
+                  href="/author/dashboard" 
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-100 transition-colors"
+                >
+                  <Home className="h-4 w-4" />
+                  Author Dashboard
+                </Link>
+                {journals.length > 0 && (
+                  <>
+                    {journals.map((journal) => (
+                      <Link
+                        key={journal.id}
+                        href={journal.path ? `/${journal.path}` : `/journal/${journal.id}`}
+                        className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-100 transition-colors"
+                      >
+                        <BookOpen className="h-4 w-4" />
+                        {journal.title}
+                      </Link>
+                    ))}
+                  </>
+                )}
               </div>
-              
-              <Button
-                onClick={logout}
-                variant="ghost"
-                size="sm"
-                className="text-white hover:bg-white hover:bg-opacity-10"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </div>
+            </Dropdown>
+          </div>
+
+          {/* Right side */}
+          <div className="flex items-center gap-6">
+            {/* Language */}
+            <Dropdown
+              button={
+                <div className="flex items-center gap-2 cursor-pointer hover:opacity-90 transition-opacity">
+                  <Globe className="h-5 w-5 text-white" />
+                  <span className="text-white font-semibold" style={{fontSize: '1.125rem', fontWeight: '600'}}>English</span>
+                  <ChevronDown className="h-5 w-5 text-white" />
+                </div>
+              }
+              align="right"
+            >
+              <DropdownSection>
+                <DropdownItem href="#" icon={<Globe className="h-4 w-4" />}>
+                  English
+                </DropdownItem>
+                <DropdownItem href="#" icon={<Globe className="h-4 w-4" />}>
+                  Bahasa Indonesia
+                </DropdownItem>
+                <DropdownItem href="#" icon={<Globe className="h-4 w-4" />}>
+                  Français
+                </DropdownItem>
+                <DropdownItem href="#" icon={<Globe className="h-4 w-4" />}>
+                  Español
+                </DropdownItem>
+              </DropdownSection>
+            </Dropdown>
+
+            {/* Notifications */}
+            <Dropdown
+              button={
+                <div className="flex items-center gap-2 cursor-pointer hover:opacity-90 transition-opacity relative">
+                  <Bell className="h-5 w-5 text-white" />
+                  <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs bg-red-500 flex items-center justify-center" style={{
+                    fontSize: '0.75rem',
+                    minWidth: '1.25rem',
+                    height: '1.25rem'
+                  }}>
+                    2
+                  </Badge>
+                </div>
+              }
+              align="right"
+            >
+              <DropdownSection>
+                <DropdownItem href="#" icon={<Bell className="h-4 w-4" />}>
+                  No new notifications
+                </DropdownItem>
+              </DropdownSection>
+            </Dropdown>
+
+            {/* User with Logout */}
+            <Dropdown
+              button={
+                <div className="flex items-center gap-2 cursor-pointer hover:opacity-90 transition-opacity">
+                  <User className="h-5 w-5 text-white" />
+                  <span className="text-white font-semibold" style={{fontSize: '1.125rem', fontWeight: '600'}}>{user.full_name || user.username || 'Author'}</span>
+                  <ChevronDown className="h-5 w-5 text-white" />
+                </div>
+              }
+              align="right"
+            >
+              <DropdownSection>
+                <DropdownItem 
+                  onClick={async () => {
+                    await logout();
+                    router.push('/login');
+                  }}
+                  icon={<LogOut className="h-4 w-4" />}
+                >
+                  Logout
+                </DropdownItem>
+              </DropdownSection>
+            </Dropdown>
           </div>
         </div>
       </header>
 
-      <div className="flex">
-        {/* Sidebar */}
-        <aside className={`${sidebarOpen ? 'block' : 'hidden'} lg:block w-64 bg-white shadow-sm border-r border-gray-200 min-h-screen`}>
-          <nav className="p-4 space-y-2">
-            {navigation.map((item) => {
-              const Icon = item.icon;
-              // Skip reviewer menu if user doesn't have reviewer role
-              if (item.role === 'reviewer' && !user.roles.some(r => r.role_path === 'reviewer')) {
-                return null;
-              }
-              
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    item.current
-                      ? "bg-[#006798] text-white"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`}
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  <div className="flex items-center space-x-3">
-                    <Icon className="h-4 w-4" />
-                    <span>{item.name}</span>
-                  </div>
-                  {item.badge && (
-                    <Badge variant={item.current ? "secondary" : "default"} className="text-xs">
-                      {item.badge}
-                    </Badge>
-                  )}
-                </Link>
-              );
-            })}
-          </nav>
+      <div className="flex flex-1">
+        {/* Sidebar - Blue OJS Theme - Sama seperti Editor */}
+        <aside className={`${sidebarOpen ? 'block' : 'hidden'} lg:block bg-[#002C40] text-white min-h-screen shadow-xl`} style={{
+          backgroundColor: '#002C40',
+          width: '22rem',
+          minHeight: 'calc(100vh - 80px)',
+          boxShadow: '4px 0 6px -1px rgba(0, 0, 0, 0.1)'
+        }}>
+          <div className="p-6" style={{padding: '1.5rem 1.25rem'}}>
+            {/* iamJOS Logo - Smaller */}
+            <div className="mb-6" style={{marginBottom: '1.5rem'}}>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-white font-bold" style={{
+                  fontSize: '1.75rem',
+                  lineHeight: '1',
+                  fontWeight: 'bold',
+                  letterSpacing: '-0.02em'
+                }}>
+                  iam
+                </span>
+                <span className="text-white font-bold" style={{
+                  fontSize: '2rem',
+                  lineHeight: '1',
+                  fontWeight: 'bold',
+                  letterSpacing: '-0.02em'
+                }}>
+                  JOS
+                </span>
+              </div>
+            </div>
+
+            {/* Navigation - Font lebih besar */}
+            <nav className="space-y-3" style={{gap: '0.75rem'}}>
+              {navigation.map((item) => {
+                const Icon = item.icon;
+                // Skip reviewer menu if user doesn't have reviewer role
+                if (item.role === 'reviewer' && !user.roles.some(r => r.role_path === 'reviewer')) {
+                  return null;
+                }
+                
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={`flex items-center justify-between px-4 py-3 rounded-lg transition-all ${
+                      item.current
+                        ? "bg-white text-[#002C40] shadow-md"
+                        : "text-white hover:bg-white hover:bg-opacity-20"
+                    }`}
+                    style={{
+                      padding: '0.875rem 1rem',
+                      fontSize: '1.0625rem',
+                      fontWeight: item.current ? '600' : '500',
+                      borderRadius: '0.5rem',
+                      color: item.current ? '#002C40' : 'white'
+                    }}
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    <div className="flex items-center space-x-3" style={{gap: '0.75rem'}}>
+                      <Icon className={item.current ? "h-5 w-5 text-[#002C40]" : "h-5 w-5 text-white"} style={{width: '1.25rem', height: '1.25rem'}} />
+                      <span style={{color: item.current ? '#002C40' : 'white'}}>{item.name}</span>
+                    </div>
+                    {item.badge && (
+                      <Badge 
+                        className={`text-xs px-2 py-0.5 ${
+                          item.current 
+                            ? "bg-[#002C40] text-white" 
+                            : "bg-white bg-opacity-30 text-white"
+                        }`}
+                        style={{
+                          fontSize: '0.75rem',
+                          padding: '0.125rem 0.5rem',
+                          borderRadius: '9999px',
+                          color: 'white'
+                        }}
+                      >
+                        {item.badge}
+                      </Badge>
+                    )}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
         </aside>
 
-        {/* Main Content */}
-        <main className="flex-1 p-6">
-          {/* Breadcrumb */}
-          <div className="mb-6">
+        {/* Main Content - Background lebih terang */}
+        <main className="flex-1 bg-white" style={{
+          padding: '2.5rem',
+          backgroundColor: '#ffffff',
+          color: '#1f2937',
+          fontSize: '1.0625rem',
+          lineHeight: '1.6'
+        }}>
+          {/* Breadcrumb - Font lebih besar */}
+          <div className="mb-6" style={{marginBottom: '1.5rem'}}>
             <nav className="flex" aria-label="Breadcrumb">
-              <ol className="inline-flex items-center space-x-1 md:space-x-3">
+              <ol className="inline-flex items-center space-x-2" style={{gap: '0.5rem'}}>
                 <li className="inline-flex items-center">
-                  <Link href={pathname.startsWith('/reviewer') ? "/reviewer" : "/author"} className="text-gray-700 hover:text-[#006798] inline-flex items-center">
-                    <Home className="w-4 h-4 mr-2" />
-                    {pathname.startsWith('/reviewer') ? 'Reviewer' : 'Author'}
+                  <Link href="/author" className="text-gray-700 hover:text-[#002C40] inline-flex items-center font-medium" style={{
+                    fontSize: '1rem',
+                    fontWeight: '500'
+                  }}>
+                    <Home className="w-5 h-5 mr-2" style={{width: '1.25rem', height: '1.25rem'}} />
+                    Author
                   </Link>
                 </li>
                 {pathname.split('/').slice(2).map((segment, index, array) => {
-                  const href = (pathname.startsWith('/reviewer') ? '/reviewer/' : '/author/') + array.slice(0, index + 1).join('/');
+                  const href = '/author/' + array.slice(0, index + 1).join('/');
                   const isLast = index === array.length - 1;
                   
                   return (
                     <li key={index}>
                       <div className="flex items-center">
-                        <span className="text-gray-400">/</span>
+                        <span className="text-gray-400 mx-2" style={{margin: '0 0.5rem'}}>/</span>
                         {isLast ? (
-                          <span className="text-gray-900 capitalize ml-2">
+                          <span className="text-gray-900 capitalize font-semibold" style={{
+                            fontSize: '1rem',
+                            fontWeight: '600'
+                          }}>
                             {segment.replace('-', ' ')}
                           </span>
                         ) : (
                           <Link 
                             href={href} 
-                            className="text-gray-700 hover:text-[#006798] ml-2 capitalize"
+                            className="text-gray-700 hover:text-[#002C40] capitalize font-medium" style={{
+                              fontSize: '1rem',
+                              fontWeight: '500'
+                            }}
                           >
                             {segment.replace('-', ' ')}
                           </Link>

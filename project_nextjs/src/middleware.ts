@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { getCurrentUser } from '@/lib/auth'
+import { getRedirectPathByRole } from '@/lib/auth-redirect'
 
 // Define protected routes
 const protectedRoutes = [
@@ -60,8 +61,14 @@ export async function middleware(request: NextRequest) {
   // Check role-based access
   const userRoles = user.roles.map(r => r.role_path)
   
-  // Special case: dashboard is accessible to all authenticated users
+  // Special case: redirect /dashboard to role-specific route
   if (pathname === '/dashboard' && user.roles.length > 0) {
+    const redirectPath = getRedirectPathByRole(user)
+    
+    if (redirectPath !== '/dashboard') {
+      return NextResponse.redirect(new URL(redirectPath, request.url))
+    }
+    
     return NextResponse.next()
   }
   

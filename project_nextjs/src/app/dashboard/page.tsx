@@ -49,10 +49,38 @@ export default function DashboardPage() {
             </a>
           )}
 
+          {user.roles.some(r => r.role_path === 'manager') && (
+            <a href="/manager" className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow cursor-pointer">
+              <h3 className="text-lg font-semibold text-[#002C40]">Journal Manager</h3>
+              <p className="text-gray-600 mt-2">Access editorial dashboard and journal settings</p>
+            </a>
+          )}
+
           {user.roles.some(r => r.role_path === 'editor') && (
             <a href="/editor" className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow cursor-pointer">
               <h3 className="text-lg font-semibold text-[#002C40]">Editor Dashboard</h3>
               <p className="text-gray-600 mt-2">Manage submissions and editorial workflow</p>
+            </a>
+          )}
+
+          {user.roles.some(r => r.role_path === 'copyeditor') && (
+            <a href="/copyeditor" className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow cursor-pointer">
+              <h3 className="text-lg font-semibold text-[#002C40]">Copyeditor</h3>
+              <p className="text-gray-600 mt-2">Work on manuscripts in copyediting stage</p>
+            </a>
+          )}
+
+          {user.roles.some(r => r.role_path === 'proofreader') && (
+            <a href="/proofreader" className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow cursor-pointer">
+              <h3 className="text-lg font-semibold text-[#002C40]">Proofreader</h3>
+              <p className="text-gray-600 mt-2">Handle proofs in production stage</p>
+            </a>
+          )}
+
+          {user.roles.some(r => r.role_path === 'layout-editor') && (
+            <a href="/layout-editor" className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow cursor-pointer">
+              <h3 className="text-lg font-semibold text-[#002C40]">Layout Editor</h3>
+              <p className="text-gray-600 mt-2">Prepare layout in production stage</p>
             </a>
           )}
 
@@ -67,6 +95,20 @@ export default function DashboardPage() {
             <a href="/reviewer" className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow cursor-pointer">
               <h3 className="text-lg font-semibold text-[#002C40]">Reviewer Dashboard</h3>
               <p className="text-gray-600 mt-2">Review assigned manuscripts</p>
+            </a>
+          )}
+
+          {user.roles.some(r => r.role_path === 'subscription-manager') && (
+            <a href="/subscription-manager" className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow cursor-pointer">
+              <h3 className="text-lg font-semibold text-[#002C40]">Subscription Manager</h3>
+              <p className="text-gray-600 mt-2">Manage subscriptions and access control</p>
+            </a>
+          )}
+
+          {user.roles.some(r => r.role_path === 'reader') && (
+            <a href="/reader" className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow cursor-pointer">
+              <h3 className="text-lg font-semibold text-[#002C40]">Reader</h3>
+              <p className="text-gray-600 mt-2">Browse published content</p>
             </a>
           )}
         </div>
