@@ -437,3 +437,44 @@ export async function updateBulkEmailPermissionsAction(formData: FormData): Prom
     return;
   }
 }
+
+export async function updateEmailTemplateAction(formData: FormData): Promise<{ success: boolean; message?: string }> {
+  try {
+    await requireSiteAdmin();
+    const templateId = (formData.get("template_id") as string | null) ?? "";
+    const templateName = (formData.get("template_name") as string | null) ?? "";
+    const subject = (formData.get("subject") as string | null) ?? "";
+    const body = (formData.get("body") as string | null) ?? "";
+    const description = (formData.get("description") as string | null) ?? "";
+    const isActive = (formData.get("is_active") as string | null) === "on" || (formData.get("is_active") as string | null) === "true";
+
+    if (!templateId || !templateName || !subject || !body) {
+      return { success: false, message: "Data template tidak lengkap" };
+    }
+
+    const supabase = getSupabaseAdminClient();
+    const { error } = await supabase
+      .from("email_templates")
+      .upsert(
+        {
+          id: templateId,
+          template_name: templateName,
+          subject,
+          body,
+          description: description || null,
+          is_active: isActive,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "id" }
+      );
+
+    if (error) {
+      return { success: false, message: "Gagal menyimpan template email" };
+    }
+
+    revalidatePath("/admin/site-settings/bulk-emails");
+    return { success: true };
+  } catch (error) {
+    return { success: false, message: "Terjadi kesalahan saat menyimpan template" };
+  }
+}

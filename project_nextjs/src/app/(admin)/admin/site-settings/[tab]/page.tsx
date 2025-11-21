@@ -24,6 +24,7 @@ import {
 } from "../actions";
 import { LOCALE_MAP } from "@/lib/locales";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+import BulkEmailsTabClient from "../tabs/BulkEmailsTabClient";
 
 type Props = {
   params: Promise<{ tab: SiteSettingTab }>;
@@ -57,7 +58,7 @@ export default async function SiteSettingsTabPage({ params }: Props) {
       {tab === "languages" && <LanguagesTab initial={languages} />}
       {tab === "plugins" && <PluginsTab items={plugins} />}
       {tab === "navigation-menus" && <NavigationMenusTab initial={navigation} />}
-      {tab === "bulk-emails" && <BulkEmailsTab journals={journals} initial={bulkEmailPerms} />}
+      {tab === "bulk-emails" && <BulkEmailsTabClient journals={journals} initial={bulkEmailPerms} templates={[]} logs={[]} />}
     </div>
   );
 }
@@ -255,16 +256,16 @@ function AppearanceTab({ initial }: { initial: Awaited<ReturnType<typeof getSite
   );
 }
 
-function LanguagesTab() {
+function LanguagesTab({ initial }: { initial: Awaited<ReturnType<typeof getSiteLanguages>> }) {
   return (
     <>
       <Section
         title="Available Locales"
         description="Aktifkan bahasa yang dapat digunakan oleh jurnal di situs ini."
       >
-        <div className="flex flex-wrap gap-3">
-          {["Bahasa Indonesia", "English", "Français", "Español"].map(
-            (locale) => (
+        <form action={updateSiteLanguagesAction} className="space-y-4">
+          <div className="flex flex-wrap gap-3">
+            {initial.enabled_locales.map((locale) => (
               <label
                 key={locale}
                 className="flex items-center gap-2 rounded-md border border-gray-300 bg-gray-50 px-4 py-2"
@@ -273,45 +274,56 @@ function LanguagesTab() {
                   padding: '0.5rem 1rem'
                 }}
               >
-                <input type="checkbox" defaultChecked={locale !== "Français"} />
+                <input 
+                  type="checkbox" 
+                  name="enabled_locales" 
+                  value={locale}
+                  defaultChecked={true}
+                />
                 {locale}
-                {locale === "Bahasa Indonesia" && (
+                {locale === initial.default_locale && (
                   <span className="rounded bg-[var(--primary)] px-2 py-0.5 text-xs font-semibold text-white">
                     Default
                   </span>
                 )}
               </label>
-            ),
-          )}
-        </div>
-        <div className="flex gap-3">
-          <Button variant="secondary">Install Locale</Button>
-          <Button>Simpan</Button>
-        </div>
+            ))}
+          </div>
+          <div className="flex gap-3">
+            <Button variant="secondary" type="button">Install Locale</Button>
+            <Button type="submit">Simpan</Button>
+          </div>
+        </form>
       </Section>
 
       <Section
         title="Language Settings"
         description="Atur bahasa antarmuka dan form input."
       >
-        <Label htmlFor="primary-locale">Primary Locale</Label>
-        <select
-          id="primary-locale"
-          className="h-11 w-full rounded-md border border-gray-300 bg-white px-3 text-gray-900 shadow-inner focus-visible:border-[#006798] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#006798]/20"
-          style={{
-            fontSize: '0.875rem',
-            height: '2.75rem',
-            padding: '0.5rem 0.75rem'
-          }}
-        >
-          <option>Bahasa Indonesia</option>
-          <option>English</option>
-          <option>Français</option>
-          <option>Español</option>
-        </select>
-        <FormMessage tone="muted">
-          Bahasa default akan digunakan pada kunjungan pertama pengguna.
-        </FormMessage>
+        <form action={updateSiteLanguagesAction} className="space-y-4">
+          <Label htmlFor="primary-locale">Primary Locale</Label>
+          <select
+            id="primary-locale"
+            name="default_locale"
+            defaultValue={initial.default_locale}
+            className="h-11 w-full rounded-md border border-gray-300 bg-white px-3 text-gray-900 shadow-inner focus-visible:border-[#006798] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#006798]/20"
+            style={{
+              fontSize: '0.875rem',
+              height: '2.75rem',
+              padding: '0.5rem 0.75rem'
+            }}
+          >
+            {initial.enabled_locales.map((locale) => (
+              <option key={locale} value={locale}>{locale}</option>
+            ))}
+          </select>
+          <FormMessage tone="muted">
+            Bahasa default akan digunakan pada kunjungan pertama pengguna.
+          </FormMessage>
+          <div className="flex justify-end">
+            <Button type="submit">Simpan</Button>
+          </div>
+        </form>
       </Section>
     </>
   );
@@ -350,7 +362,10 @@ function PluginsTab({ items }: { items: Awaited<ReturnType<typeof getSitePlugins
                   }}>{plugin.description}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <form action={toggleSitePluginAction} className="flex items-center gap-2">
+                  <form action={async (formData: FormData) => {
+                    'use server'
+                    await toggleSitePluginAction(formData)
+                  }} className="flex items-center gap-2">
                     <input type="hidden" name="plugin_id" value={plugin.id} />
                     <Label className="mb-0 flex items-center gap-2" style={{
                       fontSize: '0.875rem'
@@ -390,30 +405,15 @@ function getPluginCategoryLabel(category: string) {
   return labels[category] ?? category.replace(/(^|\s)\w/g, (c) => c.toUpperCase());
 }
 
-function NavigationMenusTab() {
-  const menus = [
-    {
-      name: "Primary Navigation",
-      description:
-        "Menu utama yang tampil di bagian atas halaman depan jurnal.",
-      items: ["Home", "About", "Login", "Register"],
-    },
-    {
-      name: "User Navigation",
-      description:
-        "Menu untuk user yang tampil di pojok kanan atas saat login.",
-      items: ["Dashboard", "Profile", "Logout"],
-    },
-  ];
-
+function NavigationMenusTab({ initial }: { initial: Awaited<ReturnType<typeof getSiteNavigation>> }) {
   return (
     <>
-      {menus.map((menu) => (
-        <Section key={menu.name} title={menu.name} description={menu.description}>
+      <Section title="Primary Navigation" description="Menu utama yang tampil di bagian atas halaman depan jurnal.">
+        <form action={updateSiteNavigationAction} className="space-y-4">
           <div className="space-y-3">
-            {menu.items.map((item) => (
+            {initial.primary.map((item, index) => (
               <div
-                key={item}
+                key={index}
                 className="flex items-center justify-between rounded-md border border-gray-300 bg-white px-4 py-3"
                 style={{
                   fontSize: '0.875rem',
@@ -422,10 +422,10 @@ function NavigationMenusTab() {
               >
                 <span>{item}</span>
                 <div className="flex gap-2">
-                  <Button size="sm" variant="secondary">
+                  <Button size="sm" variant="secondary" type="button">
                     Edit
                   </Button>
-                  <Button size="sm" variant="ghost">
+                  <Button size="sm" variant="ghost" type="button">
                     Hapus
                   </Button>
                 </div>
@@ -433,71 +433,42 @@ function NavigationMenusTab() {
             ))}
           </div>
           <div className="mt-4 flex justify-end">
-            <Button size="sm">Tambah Item</Button>
+            <Button size="sm" type="button">Tambah Item</Button>
           </div>
-        </Section>
-      ))}
-    </>
-  );
-}
-
-function BulkEmailsTab() {
-  const journals = [
-    { id: "jpk", name: "Journal of Public Knowledge", allow: true },
-    { id: "jsi", name: "Jurnal Sistem Informasi", allow: false },
-    { id: "education", name: "E-Journal Pendidikan", allow: false },
-  ];
-
-  return (
-    <>
-      <Section
-        title="Bulk Email Permissions"
-        description="Tentukan jurnal yang diizinkan menggunakan fitur email massal."
-      >
-        <p className="text-base text-gray-600" style={{
-          fontSize: '0.875rem',
-          color: '#4B5563'
-        }}>
-          Fitur email massal dapat membantu mengirim pemberitahuan ke grup user
-          tertentu. Pastikan mematuhi regulasi anti-spam.
-        </p>
-        <div className="space-y-3">
-          {journals.map((journal) => (
-            <label
-              key={journal.id}
-              className="flex items-center justify-between rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-3"
-            >
-              <span className="font-semibold text-gray-900" style={{
-                fontSize: '0.875rem',
-                fontWeight: '600',
-                color: '#111827'
-              }}>
-                {journal.name}
-              </span>
-              <input
-                type="checkbox"
-                defaultChecked={journal.allow}
-                className="h-4 w-4 rounded border border-[var(--border)]"
-              />
-            </label>
-          ))}
-        </div>
-        <div className="mt-4 flex justify-end">
-          <Button>Simpan pengaturan</Button>
-        </div>
+        </form>
       </Section>
 
-      <Section title="Catatan Kepatuhan">
-        <p className="text-base text-gray-600" style={{
-          fontSize: '0.875rem',
-          color: '#4B5563'
-        }}>
-          Penggunaan email massal harus memperhatikan peraturan anti-spam dan
-          kebijakan privasi. Pastikan setiap pengguna telah memberikan
-          persetujuan sebelum menerima pesan massal.
-        </p>
+      <Section title="User Navigation" description="Menu untuk user yang tampil di pojok kanan atas saat login.">
+        <form action={updateSiteNavigationAction} className="space-y-4">
+          <div className="space-y-3">
+            {initial.user.map((item, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between rounded-md border border-gray-300 bg-white px-4 py-3"
+                style={{
+                  fontSize: '0.875rem',
+                  padding: '0.75rem 1rem'
+                }}
+              >
+                <span>{item}</span>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="secondary" type="button">
+                    Edit
+                  </Button>
+                  <Button size="sm" variant="ghost" type="button">
+                    Hapus
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 flex justify-end">
+            <Button size="sm" type="button">Tambah Item</Button>
+          </div>
+        </form>
       </Section>
     </>
   );
 }
+
 

@@ -86,8 +86,18 @@ export async function requireJournalRole(requestOrJournalId: NextRequest | strin
     roles = rolePaths ?? [];
   }
   
-  if (!userId) throw new Error("Unauthorized");
+  if (!userId) {
+    const error: any = new Error("Unauthorized");
+    error.status = 401;
+    throw error;
+  }
+  
   const ok = await hasUserJournalRole(userId, journalId, roles);
   const isAdmin = await hasUserSiteRole(userId, "admin");
-  if (!ok && !isAdmin) throw new Error("Forbidden");
+  
+  if (!ok && !isAdmin) {
+    const error: any = new Error("Forbidden");
+    error.status = 403;
+    throw error;
+  }
 }

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 
 import {
   addJournalUserRole,
@@ -11,7 +11,7 @@ type RouteContext = {
   params: Promise<{ journalId: string }>;
 };
 
-export async function GET(request: Request, context: RouteContext) {
+export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { journalId } = await context.params;
     
@@ -35,7 +35,7 @@ export async function GET(request: Request, context: RouteContext) {
   }
 }
 
-export async function POST(request: Request, context: RouteContext) {
+export async function POST(request: NextRequest, context: RouteContext) {
   try {
     const { journalId } = await context.params;
     const body = await request.json();
@@ -57,7 +57,7 @@ export async function POST(request: Request, context: RouteContext) {
   }
 }
 
-export async function DELETE(request: Request, context: RouteContext) {
+export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     const { journalId } = await context.params;
     const body = await request.json();

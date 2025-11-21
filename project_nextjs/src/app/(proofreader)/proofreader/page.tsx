@@ -31,8 +31,10 @@ function ProofreaderDashboard() {
       const jids = Array.from(new Set((subs ?? []).map(s => s.journal_id)))
       let jmap = new Map<string, string>()
       if (jids.length) {
-        const { data: js } = await supabase.from('journals').select('id,title').in('id', jids)
-        (js ?? []).forEach(j => jmap.set(String(j.id), String(j.title ?? '')))
+        const { data: js } = await supabase.from('journals').select('id,title').in('id', jids as string[])
+        if (js) {
+          js.forEach((j: { id: string | number; title: string | null }) => jmap.set(String(j.id), String(j.title ?? '')))
+        }
       }
       const next = (subs ?? []).map(s => ({
         id: String(s.id),
