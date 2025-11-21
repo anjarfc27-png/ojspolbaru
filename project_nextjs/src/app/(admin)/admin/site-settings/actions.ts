@@ -7,10 +7,9 @@ import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireSiteAdmin } from "@/lib/permissions";
 
 const settingsSchema = z.object({
-  site_name: z.string().trim().min(1),
-  intro: z.string().trim().optional().default(""),
-  logo_url: z.string().trim().optional().default(""),
-  min_password_length: z.coerce.number().int().min(6).max(64).default(8),
+  title: z.string().trim().min(1), // Changed from site_title to match OJS 3.3
+  redirect: z.string().trim().optional().nullable(),
+  minPasswordLength: z.coerce.number().int().min(6).max(64).default(8), // Changed from min_password_length to match OJS 3.3
 });
 
 export type SiteSettings = z.infer<typeof settingsSchema>;
@@ -20,24 +19,31 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     const supabase = getSupabaseAdminClient();
     const { data, error } = await supabase
       .from("site_settings")
-      .select("site_name,intro,logo_url,min_password_length")
+      .select("title,redirect,minPasswordLength")
       .eq("id", "site")
       .single();
 
     if (error) {
       if ((error as { code?: string }).code === "42P01") {
-        return { site_name: "Open Journal Systems", intro: "", logo_url: "", min_password_length: 8 };
+        return { title: "Open Journal Systems", redirect: null, minPasswordLength: 8 };
       }
-      return { site_name: "Open Journal Systems", intro: "", logo_url: "", min_password_length: 8 };
+      return { title: "Open Journal Systems", redirect: null, minPasswordLength: 8 };
     }
 
-    const parsed = settingsSchema.safeParse(data ?? {});
+    // Map old field names to new ones for backward compatibility
+    const mappedData = {
+      title: (data as any)?.title ?? (data as any)?.site_title ?? "Open Journal Systems",
+      redirect: (data as any)?.redirect ?? (data as any)?.redirect_journal_id ?? null,
+      minPasswordLength: (data as any)?.minPasswordLength ?? (data as any)?.min_password_length ?? 8,
+    };
+
+    const parsed = settingsSchema.safeParse(mappedData);
     if (!parsed.success) {
-      return { site_name: "Open Journal Systems", intro: "", logo_url: "", min_password_length: 8 };
+      return { title: "Open Journal Systems", redirect: null, minPasswordLength: 8 };
     }
     return parsed.data;
   } catch {
-    return { site_name: "Open Journal Systems", intro: "", logo_url: "", min_password_length: 8 };
+    return { title: "Open Journal Systems", redirect: null, minPasswordLength: 8 };
   }
 }
 
@@ -47,10 +53,9 @@ export async function updateSiteSettingsAction(formData: FormData): Promise<void
   try {
     await requireSiteAdmin();
     const values = settingsSchema.safeParse({
-      site_name: (formData.get("site_name") as string | null) ?? "",
-      intro: (formData.get("intro") as string | null) ?? "",
-      logo_url: (formData.get("logo_url") as string | null) ?? "",
-      min_password_length: (formData.get("min_password_length") as string | null) ?? "8",
+      title: (formData.get("title") as string | null) ?? "",
+      redirect: (formData.get("redirect") as string | null) || null,
+      minPasswordLength: (formData.get("minPasswordLength") as string | null) ?? "8",
     });
     if (!values.success) {
       return;
@@ -71,47 +76,72 @@ export async function updateSiteSettingsAction(formData: FormData): Promise<void
   }
 }
 
-const appearanceSchema = z.object({
-  theme: z.string().trim().default("default"),
-  header_bg: z.string().trim().default("#0a2d44"),
-  show_logo: z.coerce.boolean().default(true),
-  footer_html: z.string().trim().default(""),
+// Removed appearanceSchema - not in OJS 3.3 PKPSiteAppearanceForm
+// Theme, header_bg, show_logo, footer_html are not part of OJS 3.3 appearance form
+
+// Updated to match OJS 3.3 PKPSiteAppearanceForm field names
+const appearanceSetupSchema = z.object({
+  pageHeaderTitleImage: z.string().trim().optional().default(""), // Changed from logo_url
+  pageFooter: z.string().trim().optional().default(""), // Changed from page_footer
+  sidebar: z.array(z.string()).optional().default([]), // Changed from sidebar_blocks, isOrderable in OJS 3.3
+  styleSheet: z.string().trim().optional().default(""), // Changed from stylesheet_url
 });
 
-export type SiteAppearance = z.infer<typeof appearanceSchema>;
+export type SiteAppearanceSetup = z.infer<typeof appearanceSetupSchema>;
 
-export async function getSiteAppearance(): Promise<SiteAppearance> {
+export async function getSiteAppearanceSetup(): Promise<SiteAppearanceSetup> {
   try {
     const supabase = getSupabaseAdminClient();
     const { data, error } = await supabase
       .from("site_appearance")
-      .select("theme,header_bg,show_logo,footer_html")
+      .select("pageHeaderTitleImage,pageFooter,sidebar,styleSheet")
       .eq("id", "site")
       .single();
     if (error) {
-      if ((error as { code?: string }).code === "42P01") {
-        return { theme: "default", header_bg: "#0a2d44", show_logo: true, footer_html: "" };
+      // Backward compatibility: try old field names
+      const { data: oldData } = await supabase
+        .from("site_appearance")
+        .select("logo_url,page_footer,sidebar_blocks,stylesheet_url")
+        .eq("id", "site")
+        .single();
+      if (oldData) {
+        return {
+          pageHeaderTitleImage: (oldData as any)?.logo_url ?? "",
+          pageFooter: (oldData as any)?.page_footer ?? "",
+          sidebar: Array.isArray((oldData as any)?.sidebar_blocks) ? (oldData as any).sidebar_blocks : [],
+          styleSheet: (oldData as any)?.stylesheet_url ?? "",
+        };
       }
-      return { theme: "default", header_bg: "#0a2d44", show_logo: true, footer_html: "" };
+      return { pageHeaderTitleImage: "", pageFooter: "", sidebar: [], styleSheet: "" };
     }
-    const parsed = appearanceSchema.safeParse(data ?? {});
+    const parsed = appearanceSetupSchema.safeParse({
+      pageHeaderTitleImage: (data as any)?.pageHeaderTitleImage ?? (data as any)?.logo_url ?? "",
+      pageFooter: (data as any)?.pageFooter ?? (data as any)?.page_footer ?? "",
+      sidebar: Array.isArray((data as any)?.sidebar)
+        ? (data as any).sidebar
+        : Array.isArray((data as any)?.sidebar_blocks)
+          ? (data as any).sidebar_blocks
+          : [],
+      styleSheet: (data as any)?.styleSheet ?? (data as any)?.stylesheet_url ?? "",
+    });
     if (!parsed.success) {
-      return { theme: "default", header_bg: "#0a2d44", show_logo: true, footer_html: "" };
+      return { pageHeaderTitleImage: "", pageFooter: "", sidebar: [], styleSheet: "" };
     }
     return parsed.data;
   } catch {
-    return { theme: "default", header_bg: "#0a2d44", show_logo: true, footer_html: "" };
+    return { pageHeaderTitleImage: "", pageFooter: "", sidebar: [], styleSheet: "" };
   }
 }
 
-export async function updateSiteAppearanceAction(formData: FormData): Promise<void> {
+export async function updateSiteAppearanceSetupAction(formData: FormData): Promise<void> {
   try {
     await requireSiteAdmin();
-    const values = appearanceSchema.safeParse({
-      theme: (formData.get("theme") as string | null) ?? "default",
-      header_bg: (formData.get("header_bg") as string | null) ?? "#0a2d44",
-      show_logo: (formData.get("show_logo") as string | null) === "on",
-      footer_html: (formData.get("footer_html") as string | null) ?? "",
+    const sidebarBlocks = formData.getAll("sidebar").map((x) => String(x));
+    const values = appearanceSetupSchema.safeParse({
+      pageHeaderTitleImage: (formData.get("pageHeaderTitleImage") as string | null) ?? "",
+      pageFooter: (formData.get("pageFooter") as string | null) ?? "",
+      sidebar: sidebarBlocks,
+      styleSheet: (formData.get("styleSheet") as string | null) ?? "",
     });
     if (!values.success) {
       return;
@@ -119,11 +149,20 @@ export async function updateSiteAppearanceAction(formData: FormData): Promise<vo
     const supabase = getSupabaseAdminClient();
     const { error } = await supabase
       .from("site_appearance")
-      .upsert({ id: "site", ...values.data }, { onConflict: "id" });
+      .upsert(
+        {
+          id: "site",
+          pageHeaderTitleImage: values.data.pageHeaderTitleImage,
+          pageFooter: values.data.pageFooter,
+          sidebar: values.data.sidebar,
+          styleSheet: values.data.styleSheet,
+        },
+        { onConflict: "id" }
+      );
     if (error) {
       return;
     }
-    revalidatePath("/admin/site-settings/appearance");
+    revalidatePath("/admin/site-settings/appearance/setup");
   } catch {
     return;
   }
@@ -192,10 +231,12 @@ export async function toggleSitePluginAction(formData: FormData): Promise<{ succ
   }
 }
 
+// Updated to match OJS 3.3 PKPSiteInformationForm - removed support fields
 const informationSchema = z.object({
-  support_name: z.string().trim().min(1),
-  support_email: z.string().email(),
-  support_phone: z.string().trim().optional().default(""),
+  about: z.string().trim().optional().default(""),
+  contactName: z.string().trim().min(1), // Changed from contact_name to match OJS 3.3
+  contactEmail: z.string().email(), // Changed from contact_email to match OJS 3.3
+  privacyStatement: z.string().trim().optional().default(""), // Changed from privacy_statement to match OJS 3.3
 });
 
 export type SiteInformation = z.infer<typeof informationSchema>;
@@ -205,19 +246,53 @@ export async function getSiteInformation(): Promise<SiteInformation> {
     const supabase = getSupabaseAdminClient();
     const { data, error } = await supabase
       .from("site_information")
-      .select("support_name,support_email,support_phone")
+      .select("about,contactName,contactEmail,privacyStatement")
       .eq("id", "site")
       .single();
     if (error) {
-      return { support_name: "Site Administrator", support_email: "admin@example.com", support_phone: "+62 811 1234 5678" };
+      // Backward compatibility: try old field names
+      const { data: oldData } = await supabase
+        .from("site_information")
+        .select("about,contact_name,contact_email,privacy_statement")
+        .eq("id", "site")
+        .single();
+      if (oldData) {
+        return {
+          about: (oldData as any)?.about ?? "",
+          contactName: (oldData as any)?.contact_name ?? (oldData as any)?.contactName ?? "",
+          contactEmail: (oldData as any)?.contact_email ?? (oldData as any)?.contactEmail ?? "",
+          privacyStatement: (oldData as any)?.privacy_statement ?? (oldData as any)?.privacyStatement ?? "",
+        };
+      }
+      return {
+        about: "",
+        contactName: "",
+        contactEmail: "",
+        privacyStatement: "",
+      };
     }
-    const parsed = informationSchema.safeParse(data ?? {});
+    const parsed = informationSchema.safeParse({
+      about: (data as any)?.about ?? "",
+      contactName: (data as any)?.contactName ?? (data as any)?.contact_name ?? "",
+      contactEmail: (data as any)?.contactEmail ?? (data as any)?.contact_email ?? "",
+      privacyStatement: (data as any)?.privacyStatement ?? (data as any)?.privacy_statement ?? "",
+    });
     if (!parsed.success) {
-      return { support_name: "Site Administrator", support_email: "admin@example.com", support_phone: "+62 811 1234 5678" };
+      return {
+        about: "",
+        contactName: "",
+        contactEmail: "",
+        privacyStatement: "",
+      };
     }
     return parsed.data;
   } catch {
-    return { support_name: "Site Administrator", support_email: "admin@example.com", support_phone: "+62 811 1234 5678" };
+    return {
+      about: "",
+      contactName: "",
+      contactEmail: "",
+      privacyStatement: "",
+    };
   }
 }
 
@@ -225,9 +300,10 @@ export async function updateSiteInformationAction(formData: FormData): Promise<v
   try {
     await requireSiteAdmin();
     const values = informationSchema.safeParse({
-      support_name: (formData.get("support_name") as string | null) ?? "",
-      support_email: (formData.get("support_email") as string | null) ?? "",
-      support_phone: (formData.get("support_phone") as string | null) ?? "",
+      about: (formData.get("about") as string | null) ?? "",
+      contactName: (formData.get("contactName") as string | null) ?? "",
+      contactEmail: (formData.get("contactEmail") as string | null) ?? "",
+      privacyStatement: (formData.get("privacyStatement") as string | null) ?? "",
     });
     if (!values.success) {
       return;
@@ -435,6 +511,28 @@ export async function updateBulkEmailPermissionsAction(formData: FormData): Prom
     revalidatePath("/admin/site-settings/site-setup/bulk-emails");
   } catch {
     return;
+  }
+}
+
+export async function getEnabledJournals(): Promise<Array<{ id: string; name: string }>> {
+  try {
+    const supabase = getSupabaseAdminClient();
+    const { data, error } = await supabase
+      .from("journals")
+      .select("id,title,path,is_public")
+      .eq("is_public", true)
+      .order("created_at", { ascending: true });
+
+    if (error || !data) {
+      return [];
+    }
+
+    return data.map((j: any) => ({
+      id: String(j.id),
+      name: String(j.title || j.path || j.id),
+    }));
+  } catch {
+    return [];
   }
 }
 

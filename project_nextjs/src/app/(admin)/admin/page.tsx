@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { AdminActionLink } from "@/components/admin/admin-action-link";
 import { useI18n } from "@/contexts/I18nContext";
-// import { VersionWarning } from "@/components/admin/version-warning"; // Disabled - akan diaktifkan nanti dengan API real
+import { VersionWarning } from "@/components/admin/version-warning";
 
 export default function AdminPage() {
   const { t } = useI18n();
@@ -67,8 +67,8 @@ export default function AdminPage() {
       <div className="px-6 py-6" style={{
         padding: '2rem 1.5rem'
       }}>
-        {/* Version Check Warning - DISABLED (akan diaktifkan nanti dengan API real) */}
-        {/* <VersionWarning /> */}
+        {/* Version Check Warning */}
+        <VersionWarning />
         
         {/* Site Management Section - Larger Font */}
         <h2 style={{

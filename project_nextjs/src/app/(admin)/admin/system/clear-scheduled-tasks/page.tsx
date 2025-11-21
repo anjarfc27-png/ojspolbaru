@@ -89,11 +89,21 @@ export default function ClearScheduledTaskLogsPage() {
         </table>
       </div>
 
-      <form action={formAction}>
-        <Button variant="danger" type="submit" loading={pending}>
-          Clear Logs
+      <div className="flex gap-3">
+        <form action={formAction} className="contents">
+          <Button variant="danger" type="submit" loading={pending}>
+            Clear Logs
+          </Button>
+        </form>
+        <Button
+          variant="secondary"
+          onClick={() => {
+            window.location.href = "/api/admin/download-task-log";
+          }}
+        >
+          Download Log File
         </Button>
-      </form>
+      </div>
     </div>
   );
 }

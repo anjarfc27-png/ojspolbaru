@@ -39,3 +39,5 @@ Jika terjadi error "Supabase environment belum dikonfigurasi":
 2. Pastikan semua variabel sudah diisi dengan benar
 3. Restart development server setelah mengubah file env
 
+
+

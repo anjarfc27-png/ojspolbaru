@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 
 import { SITE_SETTING_TABS, type SiteSettingTab } from "@/config/navigation";
 import { Button } from "@/components/ui/button";
@@ -8,8 +9,6 @@ import { FormMessage } from "@/components/ui/form-message";
 import {
   getSiteSettings,
   updateSiteSettingsAction,
-  getSiteAppearance,
-  updateSiteAppearanceAction,
   getSitePlugins,
   toggleSitePluginAction,
   getSiteInformation,
@@ -38,7 +37,6 @@ export default async function SiteSettingsTabPage({ params }: Props) {
   }
 
   const initial = await getSiteSettings();
-  const appearance = await getSiteAppearance();
   const plugins = await getSitePlugins();
   const information = await getSiteInformation();
   const languages = await getSiteLanguages();
@@ -54,7 +52,6 @@ export default async function SiteSettingsTabPage({ params }: Props) {
   return (
     <div className="space-y-8">
       {tab === "site-setup" && <SiteSetupTab initial={initial} information={information} />}
-      {tab === "appearance" && <AppearanceTab initial={appearance} />}
       {tab === "languages" && <LanguagesTab initial={languages} />}
       {tab === "plugins" && <PluginsTab items={plugins} />}
       {tab === "navigation-menus" && <NavigationMenusTab initial={navigation} />}
@@ -99,41 +96,28 @@ function SiteSetupTab({ initial, information }: { initial: Awaited<ReturnType<ty
   return (
     <>
       <Section
-        title="Site Identity"
-        description="Atur nama situs, logo, dan pernyataan pembuka."
+        title="Site Configuration"
+        description="OJS 3.3 PKPSiteConfigForm: title, redirect, minPasswordLength"
       >
         <form action={updateSiteSettingsAction} className="space-y-4">
           <div>
-            <Label htmlFor="site_name" className="mb-2 block font-medium" style={{
+            <Label htmlFor="title" className="mb-2 block font-medium" style={{
               marginBottom: '0.5rem',
               fontSize: '0.875rem',
               fontWeight: '500'
             }}>
-              Site name <span className="text-[#b91c1c]">*</span>
+              Site title <span className="text-[#b91c1c]">*</span>
             </Label>
-            <Input id="site_name" name="site_name" defaultValue={initial.site_name} className="max-w-md" />
+            <Input id="title" name="title" defaultValue={initial.title} className="max-w-md" required />
+            <FormMessage tone="muted" className="mt-2">
+              The title of this installation as it should appear in web browser titles.
+            </FormMessage>
           </div>
           <div>
-            <Label htmlFor="logo_url" className="mb-2 block text-sm font-medium">
-              Site logo URL
+            <Label htmlFor="minPasswordLength" className="mb-2 block text-sm font-medium">
+              Minimum password length <span className="text-[#b91c1c]">*</span>
             </Label>
-            <Input id="logo_url" name="logo_url" defaultValue={initial.logo_url} className="max-w-md" />
-          </div>
-          <div>
-            <Label htmlFor="intro" className="mb-2 block text-sm font-medium">
-              Introductory statement
-            </Label>
-            <textarea
-              id="intro"
-              name="intro"
-              rows={4}
-              defaultValue={initial.intro}
-              className="w-full max-w-2xl rounded-md border border-gray-300 bg-white px-3 py-2 shadow-inner focus-visible:border-[#006798] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#006798]/20"
-              style={{
-                fontSize: '0.875rem',
-                padding: '0.5rem 0.75rem'
-              }}
-            />
+            <Input id="minPasswordLength" name="minPasswordLength" type="number" min={6} max={64} defaultValue={initial.minPasswordLength} className="max-w-xs" required />
           </div>
           <div className="flex justify-end">
             <Button type="submit">Simpan Pengaturan</Button>
@@ -142,48 +126,61 @@ function SiteSetupTab({ initial, information }: { initial: Awaited<ReturnType<ty
       </Section>
 
       <Section
-        title="Redirect Options"
-        description="Alihkan pengunjung langsung ke jurnal tertentu."
-      >
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="redirect-path" className="mb-2 block text-sm font-medium">
-              Redirect journal path
-            </Label>
-            <Input id="redirect-path" placeholder="contoh: publicknowledge" className="max-w-md" />
-            <FormMessage tone="muted" className="mt-2">
-              Jika hanya ada satu jurnal, Anda dapat mengarahkan pengguna langsung ke jurnal tersebut.
-            </FormMessage>
-          </div>
-        </div>
-      </Section>
-
-      <Section
         title="Contact Information"
-        description="Informasi kontak yang tampil di seluruh situs."
+        description="OJS 3.3 PKPSiteInformationForm: about, contactName, contactEmail, privacyStatement"
       >
         <form action={updateSiteInformationAction} className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <Label htmlFor="support_name" className="mb-2 block text-sm font-medium">
-                Support name <span className="text-[#b91c1c]">*</span>
-              </Label>
-              <Input id="support_name" name="support_name" defaultValue={information.support_name} />
-            </div>
-            <div>
-              <Label htmlFor="support_email" className="mb-2 block text-sm font-medium">
-                Support email <span className="text-[#b91c1c]">*</span>
-              </Label>
-              <Input id="support_email" name="support_email" type="email" defaultValue={information.support_email} />
-            </div>
+          <div>
+            <Label htmlFor="about" className="mb-2 block text-sm font-medium">
+              About
+            </Label>
+            <textarea
+              id="about"
+              name="about"
+              rows={6}
+              defaultValue={information.about || ""}
+              className="w-full max-w-2xl rounded-md border border-gray-300 bg-white px-3 py-2 shadow-inner focus-visible:border-[#006798] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#006798]/20"
+              style={{
+                fontSize: '0.875rem',
+                padding: '0.5rem 0.75rem'
+              }}
+            />
+            <FormMessage tone="muted" className="mt-2">
+              A brief description of this installation that will appear on the homepage.
+            </FormMessage>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <Label htmlFor="support_phone" className="mb-2 block text-sm font-medium">
-                Support phone
+              <Label htmlFor="contactName" className="mb-2 block text-sm font-medium">
+                Contact name <span className="text-[#b91c1c]">*</span>
               </Label>
-              <Input id="support_phone" name="support_phone" defaultValue={information.support_phone} />
+              <Input id="contactName" name="contactName" defaultValue={information.contactName || ""} required />
             </div>
+            <div>
+              <Label htmlFor="contactEmail" className="mb-2 block text-sm font-medium">
+                Contact email <span className="text-[#b91c1c]">*</span>
+              </Label>
+              <Input id="contactEmail" name="contactEmail" type="email" defaultValue={information.contactEmail || ""} required />
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="privacyStatement" className="mb-2 block text-sm font-medium">
+              Privacy statement
+            </Label>
+            <textarea
+              id="privacyStatement"
+              name="privacyStatement"
+              rows={8}
+              defaultValue={information.privacyStatement || ""}
+              className="w-full max-w-2xl rounded-md border border-gray-300 bg-white px-3 py-2 shadow-inner focus-visible:border-[#006798] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#006798]/20"
+              style={{
+                fontSize: '0.875rem',
+                padding: '0.5rem 0.75rem'
+              }}
+            />
+            <FormMessage tone="muted" className="mt-2">
+              A statement describing the privacy policy for this installation.
+            </FormMessage>
           </div>
           <div className="flex justify-end pt-4">
             <Button type="submit">Simpan Informasi</Button>
@@ -194,67 +191,8 @@ function SiteSetupTab({ initial, information }: { initial: Awaited<ReturnType<ty
   );
 }
 
-function AppearanceTab({ initial }: { initial: Awaited<ReturnType<typeof getSiteAppearance>> }) {
-  return (
-    <>
-      <Section title="Theme" description="Pilih tema dan warna header.">
-        <form action={updateSiteAppearanceAction} className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <Label htmlFor="theme" className="mb-2 block text-sm font-medium">
-                Theme
-              </Label>
-              <select
-                id="theme"
-                name="theme"
-                defaultValue={initial.theme}
-                className="h-11 w-full rounded-md border border-gray-300 bg-white px-3 text-gray-900 shadow-inner focus-visible:border-[#006798] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#006798]/20"
-          style={{
-            fontSize: '0.875rem',
-            height: '2.75rem',
-            padding: '0.5rem 0.75rem'
-          }}
-              >
-                <option value="default">Default</option>
-                <option value="classic">Classic</option>
-                <option value="modern">Modern</option>
-              </select>
-            </div>
-            <div>
-              <Label htmlFor="header_bg" className="mb-2 block text-sm font-medium">
-                Header background color
-              </Label>
-              <Input id="header_bg" name="header_bg" type="text" defaultValue={initial.header_bg} className="max-w-xs" />
-            </div>
-          </div>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="show_logo" defaultChecked={initial.show_logo} className="h-4 w-4 rounded border border-[var(--border)]" />
-            Tampilkan logo situs di header
-          </label>
-          <div>
-            <Label htmlFor="footer_html" className="mb-2 block text-sm font-medium">
-              Footer HTML
-            </Label>
-            <textarea
-              id="footer_html"
-              name="footer_html"
-              rows={4}
-              defaultValue={initial.footer_html}
-              className="w-full max-w-2xl rounded-md border border-gray-300 bg-white px-3 py-2 shadow-inner focus-visible:border-[#006798] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#006798]/20"
-              style={{
-                fontSize: '0.875rem',
-                padding: '0.5rem 0.75rem'
-              }}
-            />
-          </div>
-          <div className="flex justify-end">
-            <Button type="submit">Simpan Tampilan</Button>
-          </div>
-        </form>
-      </Section>
-    </>
-  );
-}
+// AppearanceTab removed - OJS 3.3 PKPSiteAppearanceForm does not have theme, header_bg, show_logo, footer_html
+// Appearance settings are now in /admin/site-settings/appearance/setup page
 
 function LanguagesTab({ initial }: { initial: Awaited<ReturnType<typeof getSiteLanguages>> }) {
   return (
@@ -341,6 +279,13 @@ function PluginsTab({ items }: { items: Awaited<ReturnType<typeof getSitePlugins
 
   return (
     <>
+      <Section title="Installed Plugins" description="Manage plugins that are currently installed on this site.">
+        <div className="mb-4">
+          <Link href="/admin/site-settings/plugins/gallery">
+            <Button variant="primary">Browse Plugin Gallery</Button>
+          </Link>
+        </div>
+      </Section>
       {categories.map((category) => (
         <Section key={category} title={getPluginCategoryLabel(category)}>
           <div className="space-y-4">
@@ -470,5 +415,6 @@ function NavigationMenusTab({ initial }: { initial: Awaited<ReturnType<typeof ge
     </>
   );
 }
+
 
 

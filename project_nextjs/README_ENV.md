@@ -35,3 +35,5 @@ Jika file `env.local` tidak ada setelah clone:
 
 ⚠️ File `env.local` berisi credentials. Pastikan repository Anda private atau credentials sudah di-rotate jika repository public.
 
+
+
