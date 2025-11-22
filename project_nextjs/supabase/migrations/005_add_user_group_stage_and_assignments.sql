@@ -42,3 +42,4 @@ COMMENT ON TABLE user_group_stage IS 'User groups assignments to stages in the w
 COMMENT ON TABLE stage_assignments IS 'Stage Assignments - specific user assignments to submissions at workflow stages';
 
 
+

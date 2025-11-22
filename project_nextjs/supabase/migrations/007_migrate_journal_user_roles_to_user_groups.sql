@@ -35,3 +35,4 @@ ON CONFLICT (user_id, user_group_id) DO NOTHING;
 -- If user_groups don't exist, they should be created first via setup-journal route
 
 
+
